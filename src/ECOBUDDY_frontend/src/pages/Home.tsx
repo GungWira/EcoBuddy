@@ -12,7 +12,10 @@ export default function () {
       <Navbar />
       <div className="min-w-screen min-h-screen bg-mainBackground bg-4 px-4 md:px-8 pt-28 md:pt-36 flex flex-col justify-start items-center">
         {/* INTRODUCTION */}
-        <div className="flex flex-col md:justify-center md:items-center w-full gap-4 max-w-[480px] md:max-w-[500px]">
+        <div
+          className="flex flex-col md:justify-center md:items-center w-full gap-4 max-w-[480px] md:max-w-[500px]"
+          id="home"
+        >
           <Shine>ver 1.0</Shine>
           <h1 className="md:text-center text-white font-poppins font-bold text-2xl sm:text-2xl md:text-3xl lg:text-4xl">
             Cleaner Future With Your Personal
@@ -22,7 +25,7 @@ export default function () {
               Assistant
             </span>
           </h1>
-          <p className="text-whiteSoft font-poppins text-xs sm:text-sm md:text-base md:text-center">
+          <p className="text-whiteSoft font-poppins text-sm sm:text-sm md:text-base md:text-center">
             Level up your green journey with EcoBuddy! Chat, explore, and make
             everyday choices for a better planet.
           </p>
@@ -58,7 +61,7 @@ export default function () {
 
         {/* MEDIA PARTNER */}
         <div className="w-full max-w-6xl overflow-hidden flex flex-col justify-start items-center relative mt-6 md:mt-12 gap-6 md:gap-8">
-          <p className="font-poppins text-xs sm:text-sm md:text-base text-white opacity-50">
+          <p className="font-poppins text-sm sm:text-sm md:text-base text-whiteSoft">
             Supported by
           </p>
           <div className="flex flex-row justify-start items-start gap-4 overflow-hidden w-full relative">
@@ -85,8 +88,8 @@ export default function () {
 
         {/* SERVICE SECTION */}
         <div
-          className="flex flex-col max-w-6xl justify-center items-center gap-6 md:gap-8 mt-16 sm:mt-24 md:mt-32"
-          id="service"
+          className="flex flex-col max-w-6xl justify-center items-center gap-6 md:gap-8 pt-20 sm:pt-24 md:pt-32"
+          id="services"
         >
           <div className="flex flex-col justify-center items-start sm:items-center gap-4">
             <Shine>Ecobuddy On Action</Shine>
@@ -115,7 +118,10 @@ export default function () {
         </div>
 
         {/* ABOUT SECTION */}
-        <div className="w-full max-w-6xl flex md:flex-row flex-col justify-between items-center gap-6 md:gap-12 mt-16 sm:mt-24 md:mt-32">
+        <div
+          className="w-full max-w-6xl flex md:flex-row flex-col justify-between items-center gap-6 md:gap-12 pt-20 sm:pt-24 md:pt-32"
+          id="about"
+        >
           <div className="flex flex-1 w-full justify-center items-center rounded-2xl overflow-hidden relative">
             <div className="w-full h-full absolute z-10 bg-aboutBackground bg-center"></div>
             <img
@@ -129,7 +135,7 @@ export default function () {
             <h1 className="font-poppins font-bold text-white text-2xl sm:text-2xl md:text-3xl lg:text-4xl text-center my-1">
               Meet <span className="text-greenMain">Ecobuddy</span>
             </h1>
-            <p className="text-xs sm:text-sm md:text-base font-poppins opacity-60 text-white mb-2">
+            <p className="text-sm sm:text-sm md:text-base font-poppins text-whiteSoft mb-2">
               EcoBuddy is your guide to a greener lifestyle. It helps you sort
               waste, provides eco-friendly tips, and tracks your sustainability
               progress. With personalized advice and easy-to-follow steps,
@@ -147,7 +153,10 @@ export default function () {
         </div>
 
         {/* PRICING SECTION */}
-        <div className="flex flex-col justify-center items-center mt-16 sm:mt-24 md:mt-32 w-full max-w-6xl">
+        <div
+          className="flex flex-col justify-center items-center pt-20 sm:pt-24 md:pt-32 w-full max-w-6xl"
+          id="pricing"
+        >
           <div className="flex flex-col justify-center items-start sm:items-center gap-2">
             <Shine>Exclusive features</Shine>
             <h1 className="font-poppins font-bold text-white text-2xl sm:text-2xl md:text-3xl lg:text-4xl sm:text-center my-1">
@@ -198,7 +207,7 @@ export default function () {
                 We’ve Got You <span className="text-greenMain">Covered</span>
               </h1>
             </div>
-            <p className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-70">
+            <p className="font-poppins text-whiteSoft sm:text-white text-sm sm:text-sm md:text-base sm:opacity-70">
               Got questions about EcoBuddy? Find answers to the most common
               inquiries about how it works, its features, and how it helps you
               lead a greener lifestyle.

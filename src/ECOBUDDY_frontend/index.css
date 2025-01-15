@@ -1,5 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Kustom scrollbar */
+::-webkit-scrollbar {
+  width: 12px; /* Lebar scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #202020; /* Warna merah untuk track scrollbar */
+  border-radius: 9999px; /* Membuat rounded */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #13f287; /* Warna biru untuk scrollbar */
+  border-radius: 9999px; /* Membuat scrollbar rounded penuh */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #10d174; /* Warna hover scrollbar */
+}

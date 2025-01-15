@@ -12,7 +12,7 @@ export default function Footer() {
               className="text-x-24 md:w-32"
             />
           </Link>
-          <p className="font-poppins text-white opacity-70 text-xs sm:text-sm md:text-base">
+          <p className="font-poppins text-white opacity-70 text-sm sm:text-sm md:text-base">
             Your green Companion
           </p>
         </div>
@@ -23,19 +23,19 @@ export default function Footer() {
             </p>
             <Link
               to={"/"}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Home
             </Link>
             <Link
               to={"/"}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Chat
             </Link>
             <Link
               to={"/"}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Profile
             </Link>
@@ -46,19 +46,19 @@ export default function Footer() {
             </p>
             <Link
               to={""}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Docs
             </Link>
             <Link
               to={""}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Github
             </Link>
             <Link
               to={""}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Youtube
             </Link>
@@ -69,13 +69,13 @@ export default function Footer() {
             </p>
             <Link
               to={""}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               info@ecobuddy.com
             </Link>
             <Link
               to={""}
-              className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-60"
+              className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               +62 831-1422-6818
             </Link>
@@ -84,7 +84,7 @@ export default function Footer() {
       </div>
       <div className="w-full border-t border-[#2F2F2F] mt-12 sm:mt-16 md:mt-20 px-4 py-5 flex justify-center items-center">
         <div className="flex justify-center items-center w-full max-w-6xl">
-          <p className="font-poppins text-white text-xs sm:text-sm md:text-base opacity-50">
+          <p className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-50">
             Copyright © ecobuddy | Developed by Try and Astungkara Team.
           </p>
         </div>

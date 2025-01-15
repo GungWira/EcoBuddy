@@ -49,7 +49,7 @@ const FAQ: React.FC = () => {
             onClick={() => toggleFAQ(index)}
             className="flex justify-between items-center cursor-pointer"
           >
-            <h3 className="text-sm sm:text-base md:text-lg font-poppins font-medium text-white">
+            <h3 className="text-base sm:text-base md:text-lg font-poppins font-medium text-white">
               {faq.question}
             </h3>
             <span
@@ -67,7 +67,7 @@ const FAQ: React.FC = () => {
               expandedIndex === index ? "max-h-[300px]" : "max-h-0"
             }`}
           >
-            <p className="text-white opacity-60 font-poppins text-xs sm:text-sm md:text-base">
+            <p className="text-whiteSoft sm:text-white sm:opacity-60 font-poppins text-sm sm:text-sm md:text-base">
               {faq.answer}
             </p>
           </div>
