@@ -5,17 +5,20 @@ interface ButtonProps {
   children: React.ReactNode;
   link: string;
   type?: "primary" | "secondary" | "image";
+  onClick?: () => void;
 }
 
 export default function Button({
   children,
   link,
   type = "primary",
+  onClick,
 }: ButtonProps) {
   return (
     <Link
       to={link}
       className="relative overflow-visible flex justify-center items-center group"
+      onClick={onClick}
     >
       <button
         typeof="button"

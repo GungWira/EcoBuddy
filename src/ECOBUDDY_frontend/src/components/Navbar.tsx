@@ -106,7 +106,7 @@ export default function Navbar() {
           {/* CTA */}
           <div className="hidden md:flex justify-end items-center flex-1">
             <Link
-              to="/login"
+              to="/chat"
               className="bg-greenMain text-darkMain text-base rounded-full px-5 py-2 font-poppins font-semibold"
             >
               Get Started
@@ -185,7 +185,7 @@ export default function Navbar() {
           </div>
           <div className="pt-4 border-t border-[#707070] w-full">
             <Link
-              to="/login"
+              to="/chat"
               className="bg-greenMain w-full flex justify-center items-center rounded-lg font-poppins font-semibold text-darkMain py-2 text-lg"
             >
               Get Started
