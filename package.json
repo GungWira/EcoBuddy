@@ -16,6 +16,7 @@
     "src/ECOBUDDY_frontend"
   ],
   "dependencies": {
+    "gsap": "^3.12.5",
     "react-router-dom": "^7.1.1"
   }
 }
