@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import Button from "../../components/Button";
 import Shine from "../../components/Shine";
 import { useEffect, useState } from "react";
 import Bot from "../../components/Chat/Bot";

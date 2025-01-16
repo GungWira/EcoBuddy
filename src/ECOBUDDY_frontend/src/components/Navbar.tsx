@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const [isMobileNavVisible, setMobileNavVisible] = useState(false);
-  const [activeSection, setActiveSection] = useState("home"); // Menyimpan section aktif
-  const location = useLocation();
+  const [activeSection, setActiveSection] = useState("home");
 
-  const sections = ["home", "about", "services", "pricing"]; // Daftar section
+  const sections = ["home", "about", "services", "pricing"];
 
   const handleToggleNav = () => setMobileNavVisible(!isMobileNavVisible);
   const handleCloseNav = () => setMobileNavVisible(false);
@@ -20,12 +19,11 @@ export default function Navbar() {
     }
   };
 
-  // Menggunakan IntersectionObserver untuk mendeteksi section aktif
   useEffect(() => {
     const observerOptions = {
       root: null,
       rootMargin: "0px",
-      threshold: 0.6, // Section dianggap aktif jika 60% terlihat
+      threshold: 0.6,
     };
 
     const observerCallback = (entries: any) => {
