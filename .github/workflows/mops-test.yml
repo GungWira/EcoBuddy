@@ -21,4 +21,12 @@ jobs:
         run: mops install
 
       - name: run tests
-        run: mops test
+        run: |
+          if ls test/*.test.mo 1> /dev/null 2>&1; then
+            mops test
+          else
+            echo "No test files found, skipping mops test"
+          fi
+        env:
+          INSTALL_ONCHAIN: true
+          DFX_MOC_PATH: moc-wrapper
