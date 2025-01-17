@@ -1,14 +1,19 @@
 import { Link } from "react-router-dom";
-import Button from "../../components/Button";
 import Shine from "../../components/Shine";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Bot from "../../components/Chat/Bot";
 import SugestChat from "../../components/Chat/SugestChat";
 import Comand from "../../components/Chat/Comand";
 import Response from "../../components/Chat/Response";
 import Wallet from "../../components/Chat/Wallet";
+import { AuthContext } from "../../hooks/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Chat() {
+  const auth = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  const { logout, principal } = auth;
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [command, setCommand] = useState<string[]>([]);
@@ -44,6 +49,11 @@ export default function Chat() {
       prog: 0,
     });
     setIsIntro(true);
+  };
+
+  const handlerLogout = async () => {
+    await logout();
+    navigate("/");
   };
 
   return (
@@ -185,7 +195,7 @@ export default function Chat() {
                       className="max-w-none max-h-none m-0 rounded-full w-6"
                     />
                     <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base pr-2">
-                      Username
+                      User
                     </p>
                     {/* MORE NAVBAR */}
                     <div className="group-hover:flex hover:flex w-80 absolute top-8 right-0 hidden">
@@ -244,7 +254,10 @@ export default function Chat() {
                           </p>
                         </Link>
                         {/* LOGOUT */}
-                        <button className="flex justify-start items-center gap-4 py-4 w-full hover:ps-2 transition-all ease-in-out duration-150">
+                        <button
+                          className="flex justify-start items-center gap-4 py-4 w-full hover:ps-2 transition-all ease-in-out duration-150"
+                          onClick={handlerLogout}
+                        >
                           <img
                             src="/chat/logout-icon.svg"
                             alt="Bot Icon"

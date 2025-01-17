@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
+import { Link } from "react-router-dom";
+import { AuthContext } from "../hooks/AuthContext";
 
 export default function Navbar() {
   const [isMobileNavVisible, setMobileNavVisible] = useState(false);
-  const [activeSection, setActiveSection] = useState("home"); // Menyimpan section aktif
-  const location = useLocation();
+  const [activeSection, setActiveSection] = useState("home");
 
-  const sections = ["home", "about", "services", "pricing"]; // Daftar section
+  const sections = ["home", "about", "services", "pricing"];
 
   const handleToggleNav = () => setMobileNavVisible(!isMobileNavVisible);
   const handleCloseNav = () => setMobileNavVisible(false);
@@ -20,12 +20,11 @@ export default function Navbar() {
     }
   };
 
-  // Menggunakan IntersectionObserver untuk mendeteksi section aktif
   useEffect(() => {
     const observerOptions = {
       root: null,
       rootMargin: "0px",
-      threshold: 0.6, // Section dianggap aktif jika 60% terlihat
+      threshold: 0.6,
     };
 
     const observerCallback = (entries: any) => {
@@ -52,6 +51,15 @@ export default function Navbar() {
       });
     };
   }, [sections]);
+
+  // LOGIN
+  const auth = useContext(AuthContext);
+
+  if (!auth) {
+    return null;
+  }
+
+  const { isAuthenticated, login, logout } = auth;
 
   return (
     <>
@@ -102,15 +110,24 @@ export default function Navbar() {
               </button>
             ))}
           </div>
-
-          {/* CTA */}
           <div className="hidden md:flex justify-end items-center flex-1">
-            <Link
-              to="/chat"
-              className="bg-greenMain text-darkMain text-base rounded-full px-5 py-2 font-poppins font-semibold"
-            >
-              Get Started
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={logout}
+                  className="bg-red-600 text-white text-base rounded-full px-5 py-2 font-poppins font-semibold"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={login}
+                className="bg-greenMain text-darkMain text-base rounded-full px-5 py-2 font-poppins font-semibold"
+              >
+                Get Started
+              </button>
+            )}
           </div>
         </div>
       </nav>
