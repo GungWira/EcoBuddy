@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../hooks/AuthContext";
 
 export default function Navbar() {
   const [isMobileNavVisible, setMobileNavVisible] = useState(false);
@@ -51,6 +52,15 @@ export default function Navbar() {
     };
   }, [sections]);
 
+  // LOGIN
+  const auth = useContext(AuthContext);
+
+  if (!auth) {
+    return null;
+  }
+
+  const { isAuthenticated, login, logout } = auth;
+
   return (
     <>
       <nav className="fixed top-0 md:top-6 left-0 w-full flex justify-center items-center z-50">
@@ -100,15 +110,24 @@ export default function Navbar() {
               </button>
             ))}
           </div>
-
-          {/* CTA */}
           <div className="hidden md:flex justify-end items-center flex-1">
-            <Link
-              to="/chat"
-              className="bg-greenMain text-darkMain text-base rounded-full px-5 py-2 font-poppins font-semibold"
-            >
-              Get Started
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <button
+                  onClick={logout}
+                  className="bg-red-600 text-white text-base rounded-full px-5 py-2 font-poppins font-semibold"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={login}
+                className="bg-greenMain text-darkMain text-base rounded-full px-5 py-2 font-poppins font-semibold"
+              >
+                Get Started
+              </button>
+            )}
           </div>
         </div>
       </nav>
