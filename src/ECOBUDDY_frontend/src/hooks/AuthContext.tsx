@@ -8,7 +8,7 @@ interface AuthContextProps {
   isAuthenticated: boolean;
   identity: Identity | null;
   principal: string | null;
-  actor: Actor | null;
+  actor: any | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
 }

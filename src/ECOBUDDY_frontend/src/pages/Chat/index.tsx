@@ -14,7 +14,7 @@ export default function Chat() {
   const auth = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const { logout, principal } = auth;
+  const { logout, principal, actor } = auth;
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
@@ -28,6 +28,24 @@ export default function Chat() {
     isIntro: false,
     prog: 10,
   });
+
+  const [name, setName] = useState<string | undefined>();
+
+  const handleGetUsername = async () => {
+    if (!actor || !principal) {
+      return;
+    }
+    try {
+      const responses = await actor.getUsername();
+      console.log(responses[0]);
+      setName(responses[0] || "User");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    handleGetUsername();
+  }, [actor]);
 
   useEffect(() => {
     setMyBuddy({
@@ -86,8 +104,9 @@ export default function Chat() {
           {/* EDIT PROFILE */}
           <EditProfile
             urlProfile="/chat/default-profile.png"
-            username="Wira"
-            principal="hhh"
+            username={name}
+            setUsername={setName}
+            principal={principal}
             hidden={!isEditProfile}
             onClick={() => setIsEditProfile(false)}
           />
@@ -214,7 +233,7 @@ export default function Chat() {
                       className="max-w-none max-h-none m-0 rounded-full w-6"
                     />
                     <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base pr-2">
-                      User
+                      {name}
                     </p>
                     {/* MORE NAVBAR */}
                     <div className="group-hover:flex hover:flex w-80 absolute top-8 right-0 hidden">

@@ -1,22 +1,27 @@
 import { gsap } from "gsap";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Button from "../Button";
+import { AuthContext } from "../../hooks/AuthContext";
 
-interface WalletProps {
+interface EditProfileProps {
   urlProfile: string;
-  username: string;
-  principal: string;
+  username: string | undefined;
+  setUsername: any;
+  principal: string | null;
   hidden: boolean;
   onClick: () => void;
 }
 
-export default function Wallet({
+export default function EditProfile({
   urlProfile,
   username,
+  setUsername,
   principal,
   hidden,
   onClick,
-}: WalletProps) {
+}: EditProfileProps) {
+  const auth = useContext(AuthContext);
+  const { actor } = auth;
   const element = useRef(null);
   const [start, setStart] = useState(false);
   const [name, setName] = useState<string | undefined>();
@@ -70,6 +75,19 @@ export default function Wallet({
     );
     setTimeout(() => setStart(true), 500);
   }, []);
+
+  const handlerUpdateProfile = async () => {
+    if (!actor || !principal) {
+      return;
+    }
+    try {
+      await actor.setUsername(name);
+      setUsername(name);
+      onClick();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div
@@ -139,10 +157,10 @@ export default function Wallet({
             </div>
             <Button
               link=""
-              onClick={() => console.log("Halo")}
+              onClick={() => handlerUpdateProfile()}
               className={"w-full mt-2"}
             >
-              Save Chane
+              Save Change
             </Button>
           </div>
         </div>
