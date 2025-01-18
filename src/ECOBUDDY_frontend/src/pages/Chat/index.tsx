@@ -6,6 +6,7 @@ import SugestChat from "../../components/Chat/SugestChat";
 import Comand from "../../components/Chat/Comand";
 import Response from "../../components/Chat/Response";
 import Wallet from "../../components/Chat/Wallet";
+import EditProfile from "../../components/Chat/EditProfile";
 import { AuthContext } from "../../hooks/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +17,7 @@ export default function Chat() {
   const { logout, principal } = auth;
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
+  const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
   const [command, setCommand] = useState<string[]>([]);
   const [response, setResponse] = useState<string[]>([]);
   const [myBuddy, setMyBuddy] = useState({
@@ -80,6 +82,23 @@ export default function Chat() {
             hidden={!isWallet}
             onClick={() => setIsWallet(false)}
           />
+
+          {/* EDIT PROFILE */}
+          <EditProfile
+            urlProfile="/chat/default-profile.png"
+            username="Wira"
+            principal="hhh"
+            hidden={!isEditProfile}
+            onClick={() => setIsEditProfile(false)}
+          />
+
+          <div
+            className={`w-screen h-screen fixed top-0 left-0 inset-0 bg-darkMain bg-opacity-50 backdrop-blur-md transition-all ease-in-out duration-300 ${
+              isWallet || isEditProfile || isIntro
+                ? "z-10 opacity-100"
+                : "z-0 opacity-0"
+            }`}
+          ></div>
 
           {/* CHAT SECTION */}
           {/* FIRST CHAT */}
@@ -229,7 +248,10 @@ export default function Chat() {
                           </p>
                         </button>
                         {/* PROFILE */}
-                        <button className="flex justify-start items-center gap-4 py-3 w-full hover:ps-2 transition-all ease-in-out duration-150">
+                        <button
+                          className="flex justify-start items-center gap-4 py-3 w-full hover:ps-2 transition-all ease-in-out duration-150"
+                          onClick={() => setIsEditProfile(true)}
+                        >
                           <img
                             src="/chat/profile-icon.svg"
                             alt="Bot Icon"

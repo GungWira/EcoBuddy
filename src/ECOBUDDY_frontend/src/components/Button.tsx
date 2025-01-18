@@ -6,6 +6,7 @@ interface ButtonProps {
   link: string;
   type?: "primary" | "secondary" | "image";
   onClick?: () => void;
+  className?: string;
 }
 
 export default function Button({
@@ -13,16 +14,17 @@ export default function Button({
   link,
   type = "primary",
   onClick,
+  className,
 }: ButtonProps) {
   return (
     <Link
       to={link}
-      className="relative overflow-visible flex justify-center items-center group"
+      className={`relative overflow-visible flex justify-center items-center group ${className}`}
       onClick={onClick}
     >
       <button
         typeof="button"
-        className={`px-6 py-2 w-fit relative z-10 rounded-full font-poppins font-semibold text-xs sm:text-sm md:text-base flex justify-center items-center gap-2 ease-in-out transition-all duration-100 ${
+        className={`px-6 py-2 w-fit relative z-10 rounded-full font-poppins font-semibold text-xs sm:text-sm md:text-base flex justify-center items-center gap-2 ease-in-out transition-all duration-100 ${className} ${
           type == "primary"
             ? "text-darkMain bg-greenMain"
             : "text-white bg-[#202020]"
