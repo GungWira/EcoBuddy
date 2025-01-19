@@ -18,7 +18,7 @@ module{
         username : Text;
         level : Nat;
         walletAddres : Text;
-    }
+    };
 
   public type UserBalance = {
     id: Principal;

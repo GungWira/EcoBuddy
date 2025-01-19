@@ -100,17 +100,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
 
           try {
-            const userData = await userActor.getUserById(userPrincipal);
-            if (userData) {
-              setUser(userData[0]);
+            const accountIdentifier = AccountIdentifier.fromPrincipal({
+              principal: userPrincipal,
+              subAccount: undefined,
+            });
+
+            const userData = await userActor.createUser(
+              accountIdentifier.toHex()
+            );
+            console.log(userData);
+            if ("ok" in userData) {
+              setIsAuthenticated(true);
+              setUser(userData.ok);
+              setIdentity(userIdentity);
+              setPrincipal(userPrincipal);
+              setActor(userActor);
+              setLoading(false);
             } else {
-              console.log("User not found");
+              console.log("User are not verifed");
+              logout();
             }
-            setIsAuthenticated(true);
-            setIdentity(userIdentity);
-            setPrincipal(userPrincipal);
-            setActor(userActor);
-            setLoading(false);
           } catch (error) {
             console.error("Error fetching user data:", error);
           }
