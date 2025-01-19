@@ -1,7 +1,9 @@
-import Principal "mo:base/Principal";
 import HashMap "mo:base/HashMap";
+import Principal "mo:base/Principal";
+import Nat "mo:base/Nat";
+import Text "mo:base/Text";
 
-module {
+module{
   public type Users = HashMap.HashMap<Principal, User>;
   public type UserBalances = HashMap.HashMap<Principal, UserBalance>;
   public type Messages = HashMap.HashMap<Text, Message>;
@@ -10,15 +12,13 @@ module {
   public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
   public type TokenMetadatas = HashMap.HashMap<Text, TokenMetadata>;
   
-  // USER TYPES
-  public type User = {
-    id : Principal;
-    username : Text;
-    createdAt : Int;
-
-    name : ?Text;
-    profilePic : ?Text;
-  };
+  // USER TYPE
+    public type User = {
+        id : Principal;
+        username : Text;
+        level : Nat;
+        walletAddres : Text;
+    }
 
   public type UserBalance = {
     id: Principal;

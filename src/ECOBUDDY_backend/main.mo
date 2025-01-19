@@ -1,6 +1,49 @@
-actor EcoBuddy {
 
-  // User Endpoints
+import HashMap "mo:base/HashMap";
+import Principal "mo:base/Principal";
+import Iter "mo:base/Iter";
+import Result "mo:base/Result";
+
+
+import Types "types/Types";
+import UserService "services/UserService";
+
+actor EcoBuddy {
+  // DATA
+  private var users : Types.Users = HashMap.HashMap(
+    10,                 
+    Principal.equal,   
+    Principal.hash    
+  );
+
+  // DATA ENTRIES
+  private stable var usersEntries : [(Principal, Types.User)] = [];
+
+  // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
+  system func preupgrade() {
+    usersEntries := Iter.toArray(users.entries());
+  };
+  system func postupgrade() {
+    users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
+    usersEntries := [];
+  };
+  
+  // USERS ------------------------------------------------------------------ USERS  
+  
+  public shared (msg) func createUser(
+    walletAddres: Text
+    ): async Result.Result<Types.User, Text> {
+    return UserService.createUser(users, msg.caller, walletAddres);
+  };
+
+  public query func getUserById(userId : Principal) : async ?Types.User {
+    return users.get(userId);
+  };
+
+  public shared (msg) func updateUser(username : Text) : async Result.Result<Types.User, Text> {
+    return UserService.updateUser(users, msg.caller, username);
+  };
+  
   // registerUser(profile: UserProfile): Register new user with Internet Identity
   // getProfile(userId: Principal): Retrieve user profile
   // updateProfile(updates: ProfileUpdates): Update user profile information
@@ -48,8 +91,4 @@ actor EcoBuddy {
   // getLevelHistory(): Get user's level progression history
   // unlockLevelFeatures(level: Nat): Unlock features for current level
   // checkLevelPrivileges(): Check available privileges for current level
-
-  public query func greet(name : Text) : async Text {
-    return "Hello, " # name # "!";
-  };
 };

@@ -6,6 +6,7 @@ import SugestChat from "../../components/Chat/SugestChat";
 import Comand from "../../components/Chat/Comand";
 import Response from "../../components/Chat/Response";
 import Wallet from "../../components/Chat/Wallet";
+import EditProfile from "../../components/Chat/EditProfile";
 import { AuthContext } from "../../hooks/AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -13,9 +14,10 @@ export default function Chat() {
   const auth = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const { logout, principal } = auth;
+  const { logout, principal, user, loading } = auth;
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
+  const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
   const [command, setCommand] = useState<string[]>([]);
   const [response, setResponse] = useState<string[]>([]);
   const [myBuddy, setMyBuddy] = useState({
@@ -23,32 +25,45 @@ export default function Chat() {
     title: "Almost There! EcoBuddy is Leveling Up with You!",
     description:
       "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
-    isIntro: false,
+    isIntro: true,
     prog: 10,
   });
 
+  const [username, setUsername] = useState<string | undefined>(user?.username);
+  const [walletAddres, setWalletAddres] = useState<string | undefined>(
+    user?.walletAddres
+  );
+  const [level, setLevel] = useState<number | undefined>(user?.level);
+
   useEffect(() => {
-    setMyBuddy({
-      level: 1,
-      title:
-        "I’m <span className='text-green-500'>Ecobuddy</span>, Your AI Assistant",
-      description:
-        "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
-      isIntro: true,
-      prog: 0,
-    });
-  }, []);
+    if (user) {
+      setUsername(user.username);
+      setWalletAddres(user.walletAddres);
+      setLevel(Number(user.level));
+      setMyBuddy({
+        level: Number(user.level),
+        title:
+          "I’m <span className='text-green-500'>Ecobuddy</span>, Your AI Assistant",
+        description:
+          "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
+        isIntro: true,
+        prog: 0,
+      });
+    }
+  }, [user]);
 
   const handlerMyBuddy = () => {
-    setMyBuddy({
-      level: 1,
-      title: "Almost There! EcoBuddy is Leveling Up with You!",
-      description:
-        "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
-      isIntro: false,
-      prog: 0,
-    });
-    setIsIntro(true);
+    if (user) {
+      setMyBuddy({
+        level: Number(user.level),
+        title: "Almost There! EcoBuddy is Leveling Up with You!",
+        description:
+          "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
+        isIntro: false,
+        prog: 0,
+      });
+      setIsIntro(true);
+    }
   };
 
   const handlerLogout = async () => {
@@ -68,6 +83,7 @@ export default function Chat() {
             isIntro={myBuddy.isIntro}
             prog={myBuddy.prog}
             hidden={!isIntro}
+            loading={loading}
             onClick={() => {
               setIsIntro(false);
             }}
@@ -76,10 +92,28 @@ export default function Chat() {
           {/* WALLET */}
           <Wallet
             balance={1}
-            address="4Jd9XaLqT76pZmRk8YdP2nWfQvC5BtLoXYErNg"
+            address={walletAddres || ""}
             hidden={!isWallet}
             onClick={() => setIsWallet(false)}
           />
+
+          {/* EDIT PROFILE */}
+          <EditProfile
+            urlProfile="/chat/default-profile.png"
+            username={username}
+            setUsername={setUsername}
+            principal={principal}
+            hidden={!isEditProfile}
+            onClick={() => setIsEditProfile(false)}
+          />
+
+          <div
+            className={`w-screen h-screen fixed top-0 left-0 inset-0 bg-darkMain bg-opacity-50 backdrop-blur-md transition-all ease-in-out duration-300 ${
+              isWallet || isEditProfile || isIntro
+                ? "z-10 opacity-100"
+                : "z-0 opacity-0"
+            }`}
+          ></div>
 
           {/* CHAT SECTION */}
           {/* FIRST CHAT */}
@@ -195,7 +229,7 @@ export default function Chat() {
                       className="max-w-none max-h-none m-0 rounded-full w-6"
                     />
                     <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base pr-2">
-                      User
+                      {username}
                     </p>
                     {/* MORE NAVBAR */}
                     <div className="group-hover:flex hover:flex w-80 absolute top-8 right-0 hidden">
@@ -229,7 +263,10 @@ export default function Chat() {
                           </p>
                         </button>
                         {/* PROFILE */}
-                        <button className="flex justify-start items-center gap-4 py-3 w-full hover:ps-2 transition-all ease-in-out duration-150">
+                        <button
+                          className="flex justify-start items-center gap-4 py-3 w-full hover:ps-2 transition-all ease-in-out duration-150"
+                          onClick={() => setIsEditProfile(true)}
+                        >
                           <img
                             src="/chat/profile-icon.svg"
                             alt="Bot Icon"

@@ -5,12 +5,8 @@
       "type": "motoko"
     },
     "ECOBUDDY_frontend": {
-      "dependencies": [
-        "ECOBUDDY_backend"
-      ],
-      "source": [
-        "src/ECOBUDDY_frontend/dist"
-      ],
+      "dependencies": ["ECOBUDDY_backend"],
+      "source": ["src/ECOBUDDY_frontend/dist"],
       "type": "assets",
       "workspace": "ECOBUDDY_frontend"
     },
@@ -30,9 +26,7 @@
     "bitcoin": {
       "enabled": true,
       "log_level": "info",
-      "nodes": [
-        "127.0.0.1:18444"
-      ]
+      "nodes": ["127.0.0.1:18444"]
     },
     "build": {
       "args": "",

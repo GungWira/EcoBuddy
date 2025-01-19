@@ -91,18 +91,18 @@ export default function Wallet({
             />
           </button>
         </div>
-        <div className="flex flex-col md:flex-row justify-start items-stretch gap-4 w-full">
+        <div className="flex flex-col md:flex-row justify-start items-stretch gap-4 w-full max-w-full">
           <div className="flex flex-col justify-start items-start gap-2 pr-10 px-4 py-4 bg-greenGradient rounded-xl">
             <p className="font-poppins text-darkMain text-base">Balance</p>
             <p className="font-poppins text-darkMain text-2xl font-semibold">
               {balance} ICP
             </p>
           </div>
-          <div className="flex flex-col justify-start items-start gap-3 p-4 border border-whiteSoft rounded-xl w-full">
+          <div className="flex flex-col justify-start items-start gap-3 p-4 border border-whiteSoft rounded-xl w-full max-w-full overflow-hidden">
             <p className="font-poppins text-white opacity-90 text-base">
               Address
             </p>
-            <div className="flex justify-between items-center gap-8 bg-whiteSoft px-2 py-1 rounded-lg w-full relative overflow-hidden">
+            <div className="flex justify-between items-center gap-8 bg-whiteSoft px-2 py-1 rounded-lg w-full max-w-full relative overflow-hidden">
               <p className="font-poppins text-white text-base opacity-90 cursor-pointer">
                 {address}
               </p>
