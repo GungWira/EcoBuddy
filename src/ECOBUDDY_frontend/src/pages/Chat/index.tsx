@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Shine from "../../components/Shine";
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import Bot from "../../components/Chat/Bot";
 import SugestChat from "../../components/Chat/SugestChat";
 import Comand from "../../components/Chat/Comand";
@@ -18,6 +18,7 @@ export default function Chat() {
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
+  const [userInput, setUserInput] = useState<string>("");
   const [command, setCommand] = useState<string[]>([]);
   const [response, setResponse] = useState<string[]>([]);
   const [myBuddy, setMyBuddy] = useState({
@@ -34,6 +35,8 @@ export default function Chat() {
     user?.walletAddres
   );
   const [level, setLevel] = useState<number | undefined>(user?.level);
+
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user) {
@@ -65,6 +68,29 @@ export default function Chat() {
       setIsIntro(true);
     }
   };
+
+  const handlerChat = async () => {
+    if (userInput.trim() !== "") {
+      setCommand((prev) => [...prev, userInput]);
+      setUserInput("");
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handlerChat();
+    }
+  };
+
+  useEffect(() => {
+    if (command.length > response.length) {
+      setResponse((prev) => [...prev, "..."]);
+    }
+  }, [command]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [command, response]);
 
   const handlerLogout = async () => {
     await logout();
@@ -155,11 +181,15 @@ export default function Chat() {
                         type="text"
                         placeholder="Type something..."
                         autoComplete="off"
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         className="font-poppins text-white text-sm sm:text-sm md:text-base w-full bg-transparent outline-none opacity-70"
                       />
                       {/* SUBMIT BUTTON */}
                       <button
                         typeof="button"
+                        onClick={() => handlerChat()}
                         className="px-4 rounded-md gap-2 bg-greenMain flex justify-center items-center h-7 overflow-hidden"
                       >
                         <img src="/chat/send.svg" alt="Send Icon" />
@@ -201,9 +231,9 @@ export default function Chat() {
               </div>
             </div>
           ) : (
-            <div className="w-screen h-screen flex justify-start items-start px-4 sm:px-8">
+            <div className="min-w-full min-h-screen flex justify-start items-start px-4 sm:px-8 overflow-hidden">
               {/* NAVBAR */}
-              <div className="flex flex-row justify-center items-center w-full py-8 fixed top-0 left-0 px-4 sm:px-8 bg-darkMain">
+              <div className="flex flex-row justify-center items-center w-full py-6 fixed top-0 left-0 px-4 sm:px-8 bg-darkMain">
                 <div className="flex flex-row justify-between items-center w-full max-w-6xl relative">
                   <div className="flex flex-row justify-start items-center gap-4">
                     <Link to={"/"}>
@@ -312,9 +342,16 @@ export default function Chat() {
 
               {/* CHAT AREA */}
               <div className="w-full flex justify-center items-center  pt-24">
-                <div className="w-full flex flex-col justify-start items-start gap-6 max-w-6xl">
-                  <Comand>{command}</Comand>
-                  <Response>{response}</Response>
+                <div className="w-full flex flex-col justify-start items-start gap-6 max-w-6xl pb-8">
+                  {command.map((cmd, index) => (
+                    <React.Fragment key={index}>
+                      <Comand>{cmd}</Comand>
+                      {response[index] && (
+                        <Response>{response[index]}</Response>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  <div ref={chatEndRef} className="pb-12" />
                 </div>
               </div>
 
@@ -340,12 +377,16 @@ export default function Chat() {
                     type="text"
                     placeholder="Type something..."
                     autoComplete="off"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     autoFocus
                     className="font-poppins text-white text-sm sm:text-sm md:text-base w-full bg-transparent outline-none opacity-70"
                   />
                   {/* SUBMIT BUTTON */}
                   <button
                     typeof="button"
+                    onClick={() => handlerChat()}
                     className="px-4 rounded-md gap-2 bg-greenMain flex justify-center items-center h-7 overflow-hidden"
                   >
                     <img src="/chat/send.svg" alt="Send Icon" />
