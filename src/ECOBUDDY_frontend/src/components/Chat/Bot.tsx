@@ -55,6 +55,18 @@ export default function Bot({
           }
         );
       }
+    } else {
+      gsap.fromTo(
+        element.current,
+        {
+          translateY: "0%",
+        },
+        {
+          translateY: "-100%",
+          duration: 0,
+          ease: "back.out(0)",
+        }
+      );
     }
   }, [hidden, loading]);
 

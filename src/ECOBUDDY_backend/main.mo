@@ -40,4 +40,8 @@ actor EcoBuddy {
     return users.get(userId);
   };
 
+  public shared (msg) func updateUser(username : Text) : async Result.Result<Types.User, Text> {
+    return UserService.updateUser(users, msg.caller, username);
+  };
+
 };

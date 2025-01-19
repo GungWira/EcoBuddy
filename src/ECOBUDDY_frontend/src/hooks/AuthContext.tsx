@@ -20,6 +20,7 @@ interface AuthContextProps {
   actor: any | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updateUser: User) => void;
   user: User | null;
   loading: boolean;
 }
@@ -33,6 +34,7 @@ export const AuthContext = createContext<AuthContextProps>({
   logout: async () => {},
   user: null,
   loading: true,
+  updateUser: () => {},
 });
 
 interface AuthProviderProps {
@@ -101,7 +103,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const userData = await userActor.getUserById(userPrincipal);
             if (userData) {
               setUser(userData[0]);
-              console.log(userData[0]);
             } else {
               console.log("User not found");
             }
@@ -125,7 +126,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIdentity(null);
       setPrincipal(null);
       setActor(null);
+      setUser(null);
     }
+  };
+
+  const updateUser = (updateUser: User) => {
+    setUser(updateUser);
   };
 
   return (
@@ -139,6 +145,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout,
         user,
         loading,
+        updateUser,
       }}
     >
       {children}

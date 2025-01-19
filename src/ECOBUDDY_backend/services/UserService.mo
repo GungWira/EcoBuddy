@@ -36,8 +36,38 @@ module {
                 };
 
                 users.put(userId, newUser);
-                return #ok(newUser); 
+                return #ok(newUser);
             };
         };
     };
+
+    public func updateUser (
+        users: Types.Users,
+        userId: Principal,
+        username : Text
+    ) : Result.Result<Types.User, Text> {
+        // CEK USER PRINCIPAL
+        if (Principal.isAnonymous(userId)) {
+            return #err("Anonymous principals are not allowed");
+        };
+
+        switch(users.get(userId)){
+            // USER VALID
+            case (?userExist){
+                
+                let updatedUser : Types.User = {
+                    id = userExist.id;
+                    username = username;
+                    level = userExist.level;
+                    walletAddres = userExist.walletAddres;
+                };
+                users.put(userId, updatedUser);
+                #ok(updatedUser)
+            };
+            case null {
+                return #err("User not found")
+            };
+        };
+    };
+
 };

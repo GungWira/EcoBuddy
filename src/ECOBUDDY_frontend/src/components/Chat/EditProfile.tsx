@@ -22,7 +22,7 @@ export default function EditProfile({
   onClick,
 }: EditProfileProps) {
   const auth = useContext(AuthContext);
-  const { actor } = auth;
+  const { actor, updateUser } = auth;
   const element = useRef(null);
   const [start, setStart] = useState(false);
   const [name, setName] = useState<string | undefined>();
@@ -82,7 +82,8 @@ export default function EditProfile({
       return;
     }
     try {
-      await actor.setUsername(name);
+      const updatedUser = await actor.updateUser(name);
+      updateUser(updatedUser.ok);
       setUsername(name);
       onClick();
     } catch (error) {
