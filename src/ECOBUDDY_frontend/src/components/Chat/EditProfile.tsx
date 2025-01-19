@@ -2,12 +2,13 @@ import { gsap } from "gsap";
 import { useContext, useEffect, useRef, useState } from "react";
 import Button from "../Button";
 import { AuthContext } from "../../hooks/AuthContext";
+import { Principal } from "@dfinity/principal";
 
 interface EditProfileProps {
   urlProfile: string;
   username: string | undefined;
   setUsername: any;
-  principal: string | null;
+  principal: Principal | null;
   hidden: boolean;
   onClick: () => void;
 }
@@ -152,7 +153,7 @@ export default function EditProfile({
                 Principal
               </p>
               <div className="w-full px-4 py-2 rounded-md outline-none bg-[#303030] font-poppins text-sm sm:text-sm md:text-base text-whiteSoft">
-                {principal}
+                {principal?.toText()}
               </div>
             </div>
             <Button

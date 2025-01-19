@@ -14,7 +14,7 @@ export default function Chat() {
   const auth = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const { logout, principal, actor } = auth;
+  const { logout, principal, user, loading } = auth;
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
@@ -25,50 +25,45 @@ export default function Chat() {
     title: "Almost There! EcoBuddy is Leveling Up with You!",
     description:
       "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
-    isIntro: false,
+    isIntro: true,
     prog: 10,
   });
 
-  const [name, setName] = useState<string | undefined>();
-
-  const handleGetUsername = async () => {
-    if (!actor || !principal) {
-      return;
-    }
-    try {
-      const responses = await actor.getUsername();
-      console.log(responses[0]);
-      setName(responses[0] || "User");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    handleGetUsername();
-  }, [actor]);
+  const [username, setUsername] = useState<string | undefined>(user?.username);
+  const [walletAddres, setWalletAddres] = useState<string | undefined>(
+    user?.walletAddres
+  );
+  const [level, setLevel] = useState<number | undefined>(user?.level);
 
   useEffect(() => {
-    setMyBuddy({
-      level: 1,
-      title:
-        "I’m <span className='text-green-500'>Ecobuddy</span>, Your AI Assistant",
-      description:
-        "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
-      isIntro: true,
-      prog: 0,
-    });
-  }, []);
+    if (user) {
+      setUsername(user.username);
+      setWalletAddres(user.walletAddres);
+      setLevel(Number(user.level));
+      setMyBuddy({
+        level: Number(user.level),
+        title:
+          "I’m <span className='text-green-500'>Ecobuddy</span>, Your AI Assistant",
+        description:
+          "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
+        isIntro: true,
+        prog: 0,
+      });
+    }
+  }, [user]);
 
   const handlerMyBuddy = () => {
-    setMyBuddy({
-      level: 1,
-      title: "Almost There! EcoBuddy is Leveling Up with You!",
-      description:
-        "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
-      isIntro: false,
-      prog: 0,
-    });
-    setIsIntro(true);
+    if (user) {
+      setMyBuddy({
+        level: Number(user.level),
+        title: "Almost There! EcoBuddy is Leveling Up with You!",
+        description:
+          "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
+        isIntro: false,
+        prog: 0,
+      });
+      setIsIntro(true);
+    }
   };
 
   const handlerLogout = async () => {
@@ -88,6 +83,7 @@ export default function Chat() {
             isIntro={myBuddy.isIntro}
             prog={myBuddy.prog}
             hidden={!isIntro}
+            loading={loading}
             onClick={() => {
               setIsIntro(false);
             }}
@@ -96,7 +92,7 @@ export default function Chat() {
           {/* WALLET */}
           <Wallet
             balance={1}
-            address="4Jd9XaLqT76pZmRk8YdP2nWfQvC5BtLoXYErNg"
+            address={walletAddres || ""}
             hidden={!isWallet}
             onClick={() => setIsWallet(false)}
           />
@@ -104,8 +100,8 @@ export default function Chat() {
           {/* EDIT PROFILE */}
           <EditProfile
             urlProfile="/chat/default-profile.png"
-            username={name}
-            setUsername={setName}
+            username={username}
+            setUsername={setUsername}
             principal={principal}
             hidden={!isEditProfile}
             onClick={() => setIsEditProfile(false)}
@@ -233,7 +229,7 @@ export default function Chat() {
                       className="max-w-none max-h-none m-0 rounded-full w-6"
                     />
                     <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base pr-2">
-                      {name}
+                      {username}
                     </p>
                     {/* MORE NAVBAR */}
                     <div className="group-hover:flex hover:flex w-80 absolute top-8 right-0 hidden">

@@ -1,23 +1,43 @@
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
+import Iter "mo:base/Iter";
+import Result "mo:base/Result";
+
+
+import Types "types/Types";
+import UserService "services/UserService";
 
 actor EcoBuddy {
-  type userName = Text;
-  private var userName = HashMap.HashMap<Principal, userName>(
-    10,                  // Ukuran awal hash map
-    Principal.equal,     // Fungsi pembanding Principal
-    Principal.hash       // Fungsi hash untuk Principal
+  // DATA
+  private var users : Types.Users = HashMap.HashMap(
+    10,                 
+    Principal.equal,   
+    Principal.hash    
   );
 
-  // Fungsi untuk mendapatkan username berdasarkan Principal pengguna
-  public shared (msg) func getUsername() : async ?Text {
-    let caller = msg.caller; // Principal dari pengguna yang memanggil
-    return userName.get(caller); // Ambil username berdasarkan Principal
+  // DATA ENTRIES
+  private stable var usersEntries : [(Principal, Types.User)] = [];
+
+  // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
+  system func preupgrade() {
+    usersEntries := Iter.toArray(users.entries());
   };
 
-  // Fungsi untuk menyimpan atau memperbarui username
-  public shared (msg) func setUsername(newUsername: Text) : async () {
-    let caller = msg.caller; // Principal dari pengguna yang memanggil
-    userName.put(caller, newUsername); // Simpan atau perbarui username
+  system func postupgrade() {
+    users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
+    usersEntries := [];
   };
+
+  // USERS ------------------------------------------------------------------ USERS  
+  
+  public shared (msg) func createUser(
+    walletAddres: Text
+    ): async Result.Result<Types.User, Text> {
+    return UserService.createUser(users, msg.caller, walletAddres);
+  };
+
+  public query func getUserById(userId : Principal) : async ?Types.User {
+    return users.get(userId);
+  };
+
 };

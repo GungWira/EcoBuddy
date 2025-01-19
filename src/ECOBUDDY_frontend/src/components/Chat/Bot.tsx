@@ -12,6 +12,7 @@ interface BotProps {
   isIntro: boolean;
   prog?: number;
   hidden: boolean;
+  loading: boolean;
   onClick: () => void;
 }
 
@@ -22,37 +23,40 @@ export default function Bot({
   isIntro,
   prog = 0,
   hidden,
+  loading,
   onClick,
 }: BotProps) {
   const element = useRef(null);
 
   useEffect(() => {
-    if (hidden) {
-      gsap.fromTo(
-        element.current,
-        {
-          translateY: 0,
-        },
-        {
-          translateY: "-100%",
-          duration: 1,
-          ease: "back.in(.8)",
-        }
-      );
-    } else {
-      gsap.fromTo(
-        element.current,
-        {
-          translateY: "-100%",
-        },
-        {
-          translateY: "0%",
-          duration: 0.7,
-          ease: "back.out(1)",
-        }
-      );
+    if (!loading) {
+      if (hidden) {
+        gsap.fromTo(
+          element.current,
+          {
+            translateY: 0,
+          },
+          {
+            translateY: "-100%",
+            duration: 1,
+            ease: "back.in(.8)",
+          }
+        );
+      } else {
+        gsap.fromTo(
+          element.current,
+          {
+            translateY: "-100%",
+          },
+          {
+            translateY: "0%",
+            duration: 0.7,
+            ease: "back.out(1)",
+          }
+        );
+      }
     }
-  }, [hidden]);
+  }, [hidden, loading]);
 
   return (
     <div
