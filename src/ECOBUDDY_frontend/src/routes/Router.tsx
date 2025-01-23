@@ -5,24 +5,21 @@ import Home from "../pages/Home";
 import Chat from "../pages/Chat";
 import Premium from "../pages/Chat/Premium";
 import ProtectedRoute from "./ProtectedRoute";
-import { useContext } from "react";
-import { AuthContext } from "../hooks/AuthContext";
+import { useAuth } from "../hooks/AuthProvider";
 // import ProtectedRoute from "./ProtectedRoute";
 
 function Router() {
-  const auth = useContext(AuthContext);
+  const { isAuth } = useAuth();
 
-  if (!auth) {
-    return null; // Tunggu sampai konteks dimuat
-  }
+  // if (!isAuth) {
+  //   return null; // Tunggu sampai konteks dimuat
+  // }
 
-  const { isAuthenticated } = auth;
   return (
     <Routes>
-      hai
       <Route
         index
-        element={isAuthenticated ? <Navigate to="/chat" replace /> : <Home />}
+        element={isAuth ? <Navigate to="/chat" replace /> : <Home />}
       />
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>

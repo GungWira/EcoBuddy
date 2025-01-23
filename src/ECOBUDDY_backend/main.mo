@@ -3,10 +3,16 @@ import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Result "mo:base/Result";
+import Text "mo:base/Text";
 
 
 import Types "types/Types";
 import UserService "services/UserService";
+
+import IC "ic:aaaaa-aa";
+import Cycles "mo:base/ExperimentalCycles";
+import Blob "mo:base/Blob";
+
 
 actor EcoBuddy {
   // DATA
@@ -42,6 +48,62 @@ actor EcoBuddy {
 
   public shared (msg) func updateUser(username : Text) : async Result.Result<Types.User, Text> {
     return UserService.updateUser(users, msg.caller, username);
+  };
+
+
+  // AI RESPONSE ------------------------------------------------------------------- AI RESPONSE
+  public query func transform({
+    context : Blob;
+    response : IC.http_request_result;
+  }) : async IC.http_request_result {
+    {
+      response with headers = []; // not intersted in the headers
+    };
+  };
+
+  //PULIC METHOD
+  public func askBot(input : Text) : async Text {
+    let host : Text = "generativelanguage.googleapis.com";
+    let url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCOwAtmAGerXSaOM2281sBtplJ_f3c3TRY"; //HTTP that accepts IPV6
+
+
+    let idempotency_key : Text = generateUUID();
+    let request_headers = [
+      { name = "User-Agent"; value = "POST_USER_COMMAND" },
+      { name = "Content-Type"; value = "application/json" },
+      { name = "Idempotency-Key"; value = idempotency_key },
+    ];
+
+    let request_body_json : Text = "{ \"contents\": [{ \"parts\": [{\"text\": \"" # input # "\"}] }] }";
+    let request_body = Text.encodeUtf8(request_body_json);
+
+    let http_request : IC.http_request_args = {
+      url = url;
+      max_response_bytes = null;
+      headers = request_headers;
+      body = ?request_body;
+      method = #post;
+      transform = ?{
+        function = transform;
+        context = Blob.fromArray([]);
+      };
+    };
+
+    Cycles.add<system>(230_850_258_000);
+
+    let http_response : IC.http_request_result = await IC.http_request(http_request);
+
+    let decoded_text : Text = switch (Text.decodeUtf8(http_response.body)) {
+      case (null) { "No value returned" };
+      case (?y) { y };
+    };
+
+    let result : Text = decoded_text ;
+    result;
+  };
+
+  func generateUUID() : Text {
+    "UUID-123456789";
   };
   
   // registerUser(profile: UserProfile): Register new user with Internet Identity

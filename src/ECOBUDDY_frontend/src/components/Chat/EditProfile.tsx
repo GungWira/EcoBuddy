@@ -1,7 +1,7 @@
 import { gsap } from "gsap";
 import { useContext, useEffect, useRef, useState } from "react";
 import Button from "../Button";
-import { AuthContext } from "../../hooks/AuthContext";
+import { useAuth } from "../../hooks/AuthProvider";
 import { Principal } from "@dfinity/principal";
 
 interface EditProfileProps {
@@ -21,8 +21,7 @@ export default function EditProfile({
   hidden,
   onClick,
 }: EditProfileProps) {
-  const auth = useContext(AuthContext);
-  const { actor, updateUser } = auth;
+  const { callFunction, updateUser } = useAuth();
   const element = useRef(null);
   const [start, setStart] = useState(false);
   const [name, setName] = useState<string | undefined>();
@@ -78,11 +77,11 @@ export default function EditProfile({
   }, []);
 
   const handlerUpdateProfile = async () => {
-    if (!actor || !principal) {
+    if (!callFunction || !principal) {
       return;
     }
     try {
-      const updatedUser = await actor.updateUser(name);
+      const updatedUser = await callFunction.updateUser(name);
       updateUser(updatedUser.ok);
       setUsername(name);
       onClick();

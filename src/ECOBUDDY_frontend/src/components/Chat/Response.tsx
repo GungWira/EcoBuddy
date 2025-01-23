@@ -14,7 +14,7 @@ export default function Response({ children = "..." }: ResponseProps) {
       />
       <div className="w-full flex justify-start items-start">
         <div className="w-fit px-4 py-3 bg-darkSoft font-poppins max-w-[80%] text-white text-sm sm:text-sm md:text-base rounded-2xl rounded-tl-sm whitespace-pre-wrap">
-          ...
+          {children}
         </div>
       </div>
     </div>

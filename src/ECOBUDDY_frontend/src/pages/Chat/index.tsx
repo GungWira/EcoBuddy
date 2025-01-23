@@ -7,14 +7,13 @@ import Comand from "../../components/Chat/Comand";
 import Response from "../../components/Chat/Response";
 import Wallet from "../../components/Chat/Wallet";
 import EditProfile from "../../components/Chat/EditProfile";
-import { AuthContext } from "../../hooks/AuthContext";
+import { useAuth } from "../../hooks/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
 export default function Chat() {
-  const auth = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const { logout, principal, user, loading } = auth;
+  const { logout, principal, user, loading, callFunction } = useAuth();
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
@@ -72,7 +71,18 @@ export default function Chat() {
   const handlerChat = async () => {
     if (userInput.trim() !== "") {
       setCommand((prev) => [...prev, userInput]);
+      const input = userInput;
       setUserInput("");
+
+      try {
+        const botAns = await callFunction.askBot(input);
+        console.log("`" + botAns + "`");
+        const botAnsParse = JSON.parse(botAns);
+        const validResponse = botAnsParse.candidates[0].content.parts[0].text;
+        setResponse((prev) => [...prev, validResponse]);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      }
     }
   };
 
@@ -81,12 +91,6 @@ export default function Chat() {
       handlerChat();
     }
   };
-
-  useEffect(() => {
-    if (command.length > response.length) {
-      setResponse((prev) => [...prev, "..."]);
-    }
-  }, [command]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
