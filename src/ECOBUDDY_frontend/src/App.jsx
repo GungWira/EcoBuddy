@@ -1,13 +1,9 @@
-import Router from './routes/Router'
-
-// import { useState } from 'react';
-// import { ECOBUDDY_backend } from 'declarations/ECOBUDDY_backend';
+import Router from "./routes/Router";
 
 function App() {
-
   return (
     <>
-      <Router/>
+      <Router />
     </>
   );
 }

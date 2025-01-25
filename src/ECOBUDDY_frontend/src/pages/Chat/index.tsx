@@ -39,6 +39,7 @@ export default function Chat() {
 
   useEffect(() => {
     if (user) {
+      console.log("halo user")
       setUsername(user.username);
       setWalletAddres(user.walletAddres);
       setLevel(Number(user.level));
@@ -76,10 +77,8 @@ export default function Chat() {
 
       try {
         const botAns = await callFunction.askBot(input);
-        console.log("`" + botAns + "`");
-        const botAnsParse = JSON.parse(botAns);
-        const validResponse = botAnsParse.candidates[0].content.parts[0].text;
-        setResponse((prev) => [...prev, validResponse]);
+        console.log(botAns);
+        setResponse((prev) => [...prev, botAns]);
       } catch (error) {
         console.error("Fetch error:", error);
       }

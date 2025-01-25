@@ -77,19 +77,6 @@ export const useAuthClient = (options = defaultOptions) => {
           },
         });
 
-        const accountIdentifier = AccountIdentifier.fromPrincipal({
-          principal: principal,
-          subAccount: undefined,
-        });
-
-        const result = await actor.createUser(accountIdentifier.toHex());
-
-        if ("ok" in result) {
-          setUser(result.ok);
-        } else {
-          console.error("User is not verified");
-        }
-
         setCallFunction(actor);
       } catch (error) {
         console.error("Error during initAuth:", error);
@@ -100,42 +87,6 @@ export const useAuthClient = (options = defaultOptions) => {
 
     initAuth();
   }, []);
-
-  async function updateClient(client: any) {
-    const isAuthenticated = await client.isAuthenticated();
-    setIsAuth(isAuthenticated);
-
-    const identity = client.getIdentity();
-    setIdentity(identity);
-
-    const principal = identity.getPrincipal();
-    setPrincipal(principal);
-
-    setAuthUser(client);
-
-    const actor = createActor(canisterId, {
-      agentOptions: {
-        identity,
-      },
-    });
-
-    const accountIdentifier = AccountIdentifier.fromPrincipal({
-      principal: principal,
-      subAccount: undefined,
-    });
-
-    const result = await actor.createUser(accountIdentifier.toHex());
-
-    if ("ok" in result) {
-      setUser(result.ok);
-    } else {
-      console.log("User are not verifed");
-      logout();
-    }
-
-    setCallFunction(actor);
-    setLoading(false);
-  }
 
   async function login() {
     setLoading(true);
