@@ -12,6 +12,7 @@ module {
   public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
   public type TokenMetadatas = HashMap.HashMap<Text, TokenMetadata>;
 
+
   // USER TYPE
   public type User = {
     id : Principal;
@@ -52,6 +53,12 @@ module {
   public type HttpHeader = {
     name : Text;
     value : Text;
+  };
+
+  // AI TYPE
+  public type ResponseAI = {
+    solution : Text;
+    exp : Nat;
   };
 
   // MESSAGE & CHAT TYPES

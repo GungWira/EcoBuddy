@@ -81,9 +81,13 @@ export default function Chat() {
       setUserInput("");
 
       try {
-        const botAns = await callFunction.askBot(input);
+        const botAns = await callFunction.askBot(input, principal);
         setIsGenerateAnswer(false);
-        setResponse((prev) => [...prev, botAns]);
+        if ("err" in botAns) {
+          setResponse((prev) => [...prev, botAns.err]);
+        } else {
+          setResponse((prev) => [...prev, botAns.ok.solution]);
+        }
       } catch (error) {
         console.error("Fetch error:", error);
       }
