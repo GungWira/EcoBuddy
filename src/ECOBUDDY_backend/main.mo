@@ -1,12 +1,12 @@
-
 import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
-import Int "mo:base/Int";
 import Debug "mo:base/Debug";
 import JSON "mo:json";
+import Nat "mo:base/Nat";
+
 
 import Types "types/Types";
 import UserService "services/UserService";
@@ -15,14 +15,18 @@ import IC "ic:aaaaa-aa";
 import Cycles "mo:base/ExperimentalCycles";
 import Blob "mo:base/Blob";
 
-
 actor EcoBuddy {
   // DATA
   private var users : Types.Users = HashMap.HashMap(
-    10,                 
-    Principal.equal,   
-    Principal.hash    
+    10,
+    Principal.equal,
+    Principal.hash,
   );
+  private var expPoint : Nat = 0;
+  private var creativityPoint : Nat = 0;
+  private var practicalityPoint : Nat = 0;
+  private var environmentalImpactPoint : Nat = 0;
+  private var totalExp : Nat = 0;
 
   // DATA ENTRIES
   private stable var usersEntries : [(Principal, Types.User)] = [];
@@ -35,13 +39,17 @@ actor EcoBuddy {
     users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
     usersEntries := [];
   };
-  
-  // USERS ------------------------------------------------------------------ USERS  
-  
+
+  // USERS ------------------------------------------------------------------ USERS
+
+  public query (message) func getPrincipal() : async Principal {
+    message.caller;
+  };
+
   public shared (msg) func createUser(
-    walletAddres: Text
-    ): async Result.Result<Types.User, Text> {
-    return UserService.createUser(users, msg.caller, walletAddres);
+    walletAddress : Text
+  ) : async Result.Result<Types.User, Text> {
+    return UserService.createUser(users, msg.caller, walletAddress);
   };
 
   public query func getUserById(userId : Principal) : async ?Types.User {
@@ -51,7 +59,6 @@ actor EcoBuddy {
   public shared (msg) func updateUser(username : Text) : async Result.Result<Types.User, Text> {
     return UserService.updateUser(users, msg.caller, username);
   };
-
 
   // AI RESPONSE ------------------------------------------------------------------- AI RESPONSE
   public query func transform({
@@ -66,9 +73,8 @@ actor EcoBuddy {
   //PULIC METHOD
   var passAnswer : Text = "";
   public func askBot(input : Text) : async Text {
-    let host : Text = "generativelanguage.googleapis.com";
+    let _host : Text = "generativelanguage.googleapis.com";
     let url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCOwAtmAGerXSaOM2281sBtplJ_f3c3TRY"; //HTTP that accepts IPV6
-
 
     let idempotency_key : Text = generateUUID();
     let request_headers = [
@@ -122,34 +128,80 @@ actor EcoBuddy {
                     Debug.print("Parse error: " # debug_show(e));
                     "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
                   };
-                  case(#ok(parsedJson)){
-                    let solution = switch(JSON.get(parsedJson, "response.solution")){
+                  case (#ok(parsedJson)) {
+                    let solution = switch (JSON.get(parsedJson, "response.solution")) {
                       case (null) { "Solution not found" };
-                      case (?value) { 
-                        switch (value) {
-                          case (#String(s)) { s };  // Convert JSON string to Text
-                          case _ { "Invalid Solution format" };  // In case it's not a string
-                        }
-                      };
-                    };
-                    passAnswer := solution;
-                    let exp : Int = switch (JSON.get(parsedJson, "response.expAmmount.point")) {
-                      case (null) { 0 };  
                       case (?value) {
                         switch (value) {
-                          case (#Number(#Int(i))) { i };  
-                          case _ { 0 };  
-                        }
+                          case (#String(s)) { s }; // Convert JSON string to Text
+                          case _ { "Invalid Solution format" }; // In case it's not a string
+                        };
+                      };
+                    };
+                    let exp : Text = switch (JSON.get(parsedJson, "response.expAmmount.point")) {
+                      case (null) { "Exp not found" };
+                      case (?value) {
+                        switch (value) {
+                          case (#String(s)) { s }; // Convert JSON string to Text
+                          case _ { "Invalid exp format" }; // In case it's not a string
+                        };
+                      };
+                    };
+                    let creativity : Text = switch (JSON.get(parsedJson, "response.exp_details.creativity.point")) {
+                      case (null) { "Creative point not found" };
+                      case (?value) {
+                        switch (value) {
+                          case (#String(s)) { s }; // Convert JSON string to Text
+                          case _ { "Invalid exp format" }; // In case it's not a string
+                        };
+                      };
+                    };
+                    let practicality : Text = switch (JSON.get(parsedJson, "response.exp_details.practicality.point")) {
+                      case (null) { "Exp not found" };
+                      case (?value) {
+                        switch (value) {
+                          case (#String(s)) { s }; // Convert JSON string to Text
+                          case _ { "Invalid exp format" }; // In case it's not a string
+                        };
+                      };
+                    };
+                    var environmentalImpact : Text = switch (JSON.get(parsedJson, "response.exp_details.environmental_impact.point")) {
+                      case (null) { "Exp not found" };
+                      case (?value) {
+                        switch (value) {
+                          case (#String(s)) { s }; // Convert JSON string to Text
+                          case _ { "Invalid exp format" }; // In case it's not a string
+                        };
                       };
                     };
 
-                    // Debug.print("Solution: " # solution);
-                    // Debug.print(debug_show(exp));
+                    Debug.print("Solution: " # solution);
+                    Debug.print("Experience Points: " # exp);
+
+                    expPoint := switch (Nat.fromText(exp)) {
+                      case (?n) { n };
+                      case (null) { 0 };
+                    };
+                    practicalityPoint := switch (Nat.fromText(practicality)) {
+                      case (?n) { n };
+                      case (null) { 0 };
+                    };
+                    creativityPoint := switch (Nat.fromText(creativity)) {
+                      case (?n) { n };
+                      case (null) { 0 };
+                    };
+                    environmentalImpactPoint := switch (Nat.fromText(environmentalImpact)) {
+                      case (?n) { n };
+                      case (null) { 0 };
+                    };
+
+                    totalExp += expPoint;
+
                     solution;
                   };
                 };
               };
-              case _{
+              case _ {
                 Debug.print("'c' is not a string");
                 "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
               }
@@ -163,7 +215,65 @@ actor EcoBuddy {
   func generateUUID() : Text {
     "UUID-123456789";
   };
-  
+
+  // EXP POINT ------------------------------------------------------------------- EXP POINT
+  public func addExp(expPoint : Nat, userId : Principal) : async Result.Result<Nat, Text> {
+    // auth
+    if (Principal.isAnonymous(userId)) {
+      return #err("Anonymous principals are not allowed");
+    };
+    
+    // query data
+    let user = users.get(userId);
+
+    // validate if exists
+    switch (user) {
+      case(null) {
+        #err("User not found");
+      };
+      case (?currentUser) {
+        let updatedUser : Types.User = {
+          id = currentUser.id;
+          username = currentUser.username;
+          level = currentUser.level;
+          walletAddress = currentUser.walletAddress;
+          expPoints = currentUser.expPoints + expPoint;
+        };
+
+        // update data exp
+        users.put(userId, updatedUser);
+
+        // return exp ammound
+        #ok(currentUser.expPoints);
+      };
+    };
+  };
+
+  public func getTotalExp(userId : Principal) : async Result.Result<Nat, Text> {
+    // auth
+    if (Principal.isAnonymous(userId)) {
+      return #err("Anonymous principals are not allowed");
+    };
+
+    // query data
+    let user = users.get(userId);
+
+    // validate if exists
+    switch (user) {
+      case(null) {
+        #err("User not found");
+      };
+      case (?currentUser) {
+        #ok(currentUser.expPoints);
+      };
+    };
+  };
+
+  // LEVEL ------------------------------------------------------------------- LEVEL
+
+  // CHAT HISTORY ------------------------------------------------------------------- CHAT HISTORY
+
+
   // registerUser(profile: UserProfile): Register new user with Internet Identity
   // getProfile(userId: Principal): Retrieve user profile
   // updateProfile(updates: ProfileUpdates): Update user profile information

@@ -3,7 +3,7 @@ import Principal "mo:base/Principal";
 import Nat "mo:base/Nat";
 import Text "mo:base/Text";
 
-module{
+module {
   public type Users = HashMap.HashMap<Principal, User>;
   public type UserBalances = HashMap.HashMap<Principal, UserBalance>;
   public type Messages = HashMap.HashMap<Text, Message>;
@@ -11,35 +11,36 @@ module{
   public type Tokens = HashMap.HashMap<Text, Token>;
   public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
   public type TokenMetadatas = HashMap.HashMap<Text, TokenMetadata>;
-  
+
   // USER TYPE
-    public type User = {
-        id : Principal;
-        username : Text;
-        level : Nat;
-        walletAddres : Text;
-    };
+  public type User = {
+    id : Principal;
+    username : Text;
+    level : Nat;
+    walletAddress : Text;
+    expPoints : Nat;
+  };
 
   public type UserBalance = {
-    id: Principal;
-    balance: Nat;
+    id : Principal;
+    balance : Nat;
   };
 
   // REQ TYPE
-  public type HttpRequest =  {
+  public type HttpRequest = {
     url : Text;
-    max_response_bytes: ?Nat64;
-    
+    max_response_bytes : ?Nat64;
+
     header_host : Text;
     header_content_type : Text;
     header_user_agent : Text;
-    
-    body: ?Blob;
-    method: HttpMethod;
+
+    body : ?Blob;
+    method : HttpMethod;
   };
 
   public type HttpMethod = {
-      #post;
+    #post;
   };
 
   public type HttpResponse = {
@@ -48,18 +49,38 @@ module{
     body : Blob;
   };
 
-  public type HttpHeader = { 
-      name : Text; 
-      value : Text 
+  public type HttpHeader = {
+    name : Text;
+    value : Text;
   };
 
-
-  // MESSAGE TYPES
+  // MESSAGE & CHAT TYPES
   public type Message = {
     id : Text;
-    sender : Principal;
+    userId : Principal;
     content : Text;
     timestamp : Int;
+    messageType : MessageType;
+  };
+
+  private type MessageType = {
+    #UserMessage;
+    #AiMessage;
+    #SystemMessage;
+  };
+
+  public type ChatSession = {
+    id : Text;
+    userId : Principal;
+    messages : [Message];
+    createdAt : Int;
+    updatedAt : Int;
+  };
+
+  public type ChatRecord = {
+    session : ChatSession;
+    previousHash : ?Text;
+    currentHash : Text;
   };
 
   // TRANSACTION TYPES
@@ -91,4 +112,4 @@ module{
     tokenId : Text;
     metadata : Text;
   };
-}
+};
