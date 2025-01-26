@@ -14,7 +14,8 @@ import LoadingDots from "../../components/Chat/LoadingDots";
 export default function Chat() {
   const navigate = useNavigate();
 
-  const { logout, principal, user, loading, callFunction, isAuth } = useAuth();
+  const { logout, principal, user, loading, callFunction, isAuth, updateUser } =
+    useAuth();
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
@@ -23,9 +24,10 @@ export default function Chat() {
   const [response, setResponse] = useState<string[]>([]);
   const [myBuddy, setMyBuddy] = useState({
     level: 1,
-    title: "Almost There! EcoBuddy is Leveling Up with You!",
+    title:
+      "I’m <span className='text-green-500'>Ecobuddy</span>, Your AI Assistant",
     description:
-      "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
+      "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
     isIntro: true,
     prog: 10,
   });
@@ -45,6 +47,7 @@ export default function Chat() {
       setUsername(user.username);
       setWalletAddres(user.walletAddres);
       setLevel(Number(user.level));
+
       setMyBuddy({
         level: Number(user.level),
         title:
@@ -52,7 +55,7 @@ export default function Chat() {
         description:
           "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
         isIntro: true,
-        prog: 0,
+        prog: Number(user.expPoints),
       });
     } else {
     }
@@ -66,7 +69,7 @@ export default function Chat() {
         description:
           "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
         isIntro: false,
-        prog: 0,
+        prog: Number(user.expPoints),
       });
       setIsIntro(true);
     }
@@ -87,6 +90,13 @@ export default function Chat() {
           setResponse((prev) => [...prev, botAns.err]);
         } else {
           setResponse((prev) => [...prev, botAns.ok.solution]);
+          updateUser({
+            id: principal,
+            username: username,
+            level: level,
+            walletAddres: walletAddres,
+            expPoints: user.expPoints + botAns.ok.exp,
+          });
         }
       } catch (error) {
         console.error("Fetch error:", error);

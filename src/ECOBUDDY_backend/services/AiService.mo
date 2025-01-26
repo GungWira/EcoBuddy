@@ -49,7 +49,7 @@ module {
                 #err "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
             };
             case (#ok(data)){
-                // Debug.print(debug_show(data));
+                Debug.print(debug_show(data));
                 switch(JSON.get(data, "candidates[0].content.parts[0].text")){
                 case (null){
                     Debug.print("Field tidak ditemukan");
@@ -58,9 +58,23 @@ module {
                 case (?jsonString){
                     switch(jsonString){
                     case(#String(jsonText)){
-                        switch (JSON.parse(jsonText)){
+                        let validJsonText = switch(Text.startsWith(jsonText, #char '`')){
+                            
+                            case(true) {
+                                let withoutStart = Text.replace(jsonText, #text "```", "");
+                                let result = Text.replace(withoutStart, #text "json", "");
+                                result;
+                            };
+                            case (false){
+                                jsonText;
+                            };
+                        };
+                        switch (JSON.parse(validJsonText)){
                         case(#err(e)){
                             Debug.print("Parse error: " # debug_show(e));
+                            let withoutStart = Text.trimStart(jsonText, #char '`');
+                            let withoutEnd = Text.trimEnd(withoutStart, #char '`');
+                            let result = Text.replace(withoutEnd, #text "JSON", ""); 
                             #err "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
                         };
                         case(#ok(parsedJson)){
