@@ -112,26 +112,6 @@ actor EcoBuddy {
     };
   };
 
-  public shared (msg) func getTotalExp() : async Result.Result<Nat, Text> {
-    // auth
-    if (Principal.isAnonymous(msg.caller)) {
-      return #err("Anonymous principals are not allowed");
-    };
-
-    // query data
-    let user = users.get(msg.caller);
-
-    // validate if exists
-    switch (user) {
-      case(null) {
-        #err("User not found");
-      };
-      case (?currentUser) {
-        #ok(currentUser.expPoints);
-      };
-    };
-  };
-
   // // LEVEL ------------------------------------------------------------------- LEVEL
   // public func getProgressToNextLevel() {
 
