@@ -32,7 +32,8 @@ module {
                     id = userId;
                     username = "User";
                     level = 1;
-                    walletAddres = walletAddress;
+                    walletAddress = walletAddress;
+                    expPoints = 0;
                 };
 
                 users.put(userId, newUser);
@@ -59,7 +60,8 @@ module {
                     id = userExist.id;
                     username = username;
                     level = userExist.level;
-                    walletAddres = userExist.walletAddres;
+                    walletAddress = userExist.walletAddress;
+                    expPoints = userExist.expPoints;
                 };
                 users.put(userId, updatedUser);
                 #ok(updatedUser)
