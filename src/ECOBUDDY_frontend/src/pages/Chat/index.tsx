@@ -9,11 +9,12 @@ import Wallet from "../../components/Chat/Wallet";
 import EditProfile from "../../components/Chat/EditProfile";
 import { useAuth } from "../../hooks/AuthProvider";
 import { useNavigate } from "react-router-dom";
+import LoadingDots from "../../components/Chat/LoadingDots";
 
 export default function Chat() {
   const navigate = useNavigate();
 
-  const { logout, principal, user, loading, callFunction } = useAuth();
+  const { logout, principal, user, loading, callFunction, isAuth } = useAuth();
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
@@ -34,12 +35,13 @@ export default function Chat() {
     user?.walletAddres
   );
   const [level, setLevel] = useState<number | undefined>(user?.level);
+  const [isGenerateAnswer, setIsGenerateAnswer] = useState<Boolean>(false);
+  const [isFinishTyping, setIsFinishTyping] = useState(true);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user) {
-      console.log("halo user")
+    if (user && isAuth) {
       setUsername(user.username);
       setWalletAddres(user.walletAddres);
       setLevel(Number(user.level));
@@ -52,8 +54,9 @@ export default function Chat() {
         isIntro: true,
         prog: 0,
       });
+    } else {
     }
-  }, [user]);
+  }, [user, isAuth]);
 
   const handlerMyBuddy = () => {
     if (user) {
@@ -70,14 +73,16 @@ export default function Chat() {
   };
 
   const handlerChat = async () => {
-    if (userInput.trim() !== "") {
+    if (userInput.trim() !== "" && isFinishTyping) {
+      setIsGenerateAnswer(true);
+      setIsFinishTyping(false);
       setCommand((prev) => [...prev, userInput]);
       const input = userInput;
       setUserInput("");
 
       try {
         const botAns = await callFunction.askBot(input);
-        console.log(botAns);
+        setIsGenerateAnswer(false);
         setResponse((prev) => [...prev, botAns]);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -350,10 +355,13 @@ export default function Chat() {
                     <React.Fragment key={index}>
                       <Comand>{cmd}</Comand>
                       {response[index] && (
-                        <Response>{response[index]}</Response>
+                        <Response onFinish={() => setIsFinishTyping(true)}>
+                          {response[index]}
+                        </Response>
                       )}
                     </React.Fragment>
                   ))}
+                  {isGenerateAnswer && <LoadingDots />}
                   <div ref={chatEndRef} className="pb-12" />
                 </div>
               </div>
