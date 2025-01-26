@@ -6,7 +6,7 @@ import Text "mo:base/Text";
 import Debug "mo:base/Debug";
 import JSON "mo:json";
 import Nat "mo:base/Nat";
-
+import Int "mo:base/Int";
 
 import Types "types/Types";
 import UserService "services/UserService";
@@ -17,19 +17,17 @@ import Blob "mo:base/Blob";
 
 actor EcoBuddy {
   // DATA
-  private var users : Types.Users = HashMap.HashMap(
+  private var users : Types.Users = HashMap.HashMap<Principal, Types.User>(
     10,
     Principal.equal,
     Principal.hash,
   );
-  private var expPoint : Nat = 0;
-  private var creativityPoint : Nat = 0;
-  private var practicalityPoint : Nat = 0;
-  private var environmentalImpactPoint : Nat = 0;
-  private var totalExp : Nat = 0;
 
   // DATA ENTRIES
   private stable var usersEntries : [(Principal, Types.User)] = [];
+
+  // DATA EXP
+  private var totalExp : Nat = 0;
 
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
@@ -75,6 +73,7 @@ actor EcoBuddy {
   public func askBot(input : Text) : async Text {
     let _host : Text = "generativelanguage.googleapis.com";
     let url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCOwAtmAGerXSaOM2281sBtplJ_f3c3TRY"; //HTTP that accepts IPV6
+
 
     let idempotency_key : Text = generateUUID();
     let request_headers = [
@@ -128,80 +127,36 @@ actor EcoBuddy {
                     Debug.print("Parse error: " # debug_show(e));
                     "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
                   };
-                  case (#ok(parsedJson)) {
-                    let solution = switch (JSON.get(parsedJson, "response.solution")) {
+                  case(#ok(parsedJson)){
+                    let solution = switch(JSON.get(parsedJson, "response.solution")){
                       case (null) { "Solution not found" };
-                      case (?value) {
+                      case (?value) { 
                         switch (value) {
-                          case (#String(s)) { s }; // Convert JSON string to Text
-                          case _ { "Invalid Solution format" }; // In case it's not a string
-                        };
+                          case (#String(s)) { s };  // Convert JSON string to Text
+                          case _ { "Invalid Solution format" };  // In case it's not a string
+                        }
                       };
                     };
-                    let exp : Text = switch (JSON.get(parsedJson, "response.expAmmount.point")) {
-                      case (null) { "Exp not found" };
+                    passAnswer := solution;
+                    let exp : Int = switch (JSON.get(parsedJson, "response.expAmmount.point")) {
+                      case (null) { 0 };  
                       case (?value) {
                         switch (value) {
-                          case (#String(s)) { s }; // Convert JSON string to Text
-                          case _ { "Invalid exp format" }; // In case it's not a string
-                        };
-                      };
-                    };
-                    let creativity : Text = switch (JSON.get(parsedJson, "response.exp_details.creativity.point")) {
-                      case (null) { "Creative point not found" };
-                      case (?value) {
-                        switch (value) {
-                          case (#String(s)) { s }; // Convert JSON string to Text
-                          case _ { "Invalid exp format" }; // In case it's not a string
-                        };
-                      };
-                    };
-                    let practicality : Text = switch (JSON.get(parsedJson, "response.exp_details.practicality.point")) {
-                      case (null) { "Exp not found" };
-                      case (?value) {
-                        switch (value) {
-                          case (#String(s)) { s }; // Convert JSON string to Text
-                          case _ { "Invalid exp format" }; // In case it's not a string
-                        };
-                      };
-                    };
-                    var environmentalImpact : Text = switch (JSON.get(parsedJson, "response.exp_details.environmental_impact.point")) {
-                      case (null) { "Exp not found" };
-                      case (?value) {
-                        switch (value) {
-                          case (#String(s)) { s }; // Convert JSON string to Text
-                          case _ { "Invalid exp format" }; // In case it's not a string
-                        };
+                          case (#Number(#Int(i))) { i };  
+                          case _ { 0 };  
+                        }
                       };
                     };
 
-                    Debug.print("Solution: " # solution);
-                    Debug.print("Experience Points: " # exp);
-
-                    expPoint := switch (Nat.fromText(exp)) {
-                      case (?n) { n };
-                      case (null) { 0 };
-                    };
-                    practicalityPoint := switch (Nat.fromText(practicality)) {
-                      case (?n) { n };
-                      case (null) { 0 };
-                    };
-                    creativityPoint := switch (Nat.fromText(creativity)) {
-                      case (?n) { n };
-                      case (null) { 0 };
-                    };
-                    environmentalImpactPoint := switch (Nat.fromText(environmentalImpact)) {
-                      case (?n) { n };
-                      case (null) { 0 };
-                    };
-
-                    totalExp += expPoint;
+                    // Debug.print("Solution: " # solution);
+                    // Debug.print(debug_show(exp));
+                    totalExp := totalExp + Int.abs(exp);
 
                     solution;
                   };
                 };
               };
-              case _ {
+              case _{
                 Debug.print("'c' is not a string");
                 "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
               }
@@ -217,14 +172,14 @@ actor EcoBuddy {
   };
 
   // EXP POINT ------------------------------------------------------------------- EXP POINT
-  public func addExp(expPoint : Nat, userId : Principal) : async Result.Result<Nat, Text> {
+  public shared (msg) func addExp(expPoint : Nat) : async Result.Result<Nat, Text> {
     // auth
-    if (Principal.isAnonymous(userId)) {
+    if (Principal.isAnonymous(msg.caller)) {
       return #err("Anonymous principals are not allowed");
     };
     
     // query data
-    let user = users.get(userId);
+    let user = users.get(msg.caller);
 
     // validate if exists
     switch (user) {
@@ -241,22 +196,22 @@ actor EcoBuddy {
         };
 
         // update data exp
-        users.put(userId, updatedUser);
+        users.put(msg.caller, updatedUser);
 
-        // return exp ammound
+        // return exp amount
         #ok(currentUser.expPoints);
       };
     };
   };
 
-  public func getTotalExp(userId : Principal) : async Result.Result<Nat, Text> {
+  public shared (msg) func getTotalExp() : async Result.Result<Nat, Text> {
     // auth
-    if (Principal.isAnonymous(userId)) {
+    if (Principal.isAnonymous(msg.caller)) {
       return #err("Anonymous principals are not allowed");
     };
 
     // query data
-    let user = users.get(userId);
+    let user = users.get(msg.caller);
 
     // validate if exists
     switch (user) {
@@ -269,7 +224,52 @@ actor EcoBuddy {
     };
   };
 
-  // LEVEL ------------------------------------------------------------------- LEVEL
+  // // LEVEL ------------------------------------------------------------------- LEVEL
+  // public func getProgressToNextLevel() {
+
+  // };
+
+  // public func getCurrentLevel(userId: Principal) {
+
+  // };
+
+  // public func upgradeLevelStatus() {
+
+  // };
+
+  // public func getLevelRequirements(level: Nat) {
+
+  // };
+
+  // public func unlockAvatar(level: Nat) {
+
+  // };
+
+  // // ACHIEVEMENT ------------------------------------------------------------------- ACHIEVEMENT
+  // public func createAchievement() {
+
+  // };
+
+  // public func getAchievements(userId: Principal) {
+
+  // };
+
+  // public func trackProgress(achievementId: Text) {
+
+  // };
+
+  // public func awardAchievement(userId: Principal, achievementId: Text) {
+
+  // };
+
+  
+  // calculateExperience(actions: [Action]): Calculate experience points
+  // upgradeLevelStatus(): Check and upgrade level if eligible
+  // getLevelRequirements(level: Nat): Get requirements for specific level
+  // getProgressToNextLevel(): Get progress towards next level
+  // getLevelHistory(): Get user's level progression history
+  // unlockLevelFeatures(level: Nat): Unlock features for current level
+  // checkLevelPrivileges(): Check available privileges for current level
 
   // CHAT HISTORY ------------------------------------------------------------------- CHAT HISTORY
 
