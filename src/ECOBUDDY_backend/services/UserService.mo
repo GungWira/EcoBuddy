@@ -10,7 +10,7 @@ module {
         users : Types.Users,
         userId : Principal,
         walletAddress : Text,
-    ) : Result.Result<Types.User, Text> {
+    ) : async Result.Result<Types.User, Text> {
         // CEK USER PRINCIPAL
         if (Principal.isAnonymous(userId)) {
             return #err("Anonymous principals are not allowed");
