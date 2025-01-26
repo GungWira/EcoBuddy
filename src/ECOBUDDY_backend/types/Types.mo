@@ -18,12 +18,41 @@ module{
         username : Text;
         level : Nat;
         walletAddres : Text;
-    }
+    };
 
   public type UserBalance = {
     id: Principal;
     balance: Nat;
   };
+
+  // REQ TYPE
+  public type HttpRequest =  {
+    url : Text;
+    max_response_bytes: ?Nat64;
+    
+    header_host : Text;
+    header_content_type : Text;
+    header_user_agent : Text;
+    
+    body: ?Blob;
+    method: HttpMethod;
+  };
+
+  public type HttpMethod = {
+      #post;
+  };
+
+  public type HttpResponse = {
+    status : Nat;
+    headers : [HttpHeader];
+    body : Blob;
+  };
+
+  public type HttpHeader = { 
+      name : Text; 
+      value : Text 
+  };
+
 
   // MESSAGE TYPES
   public type Message = {

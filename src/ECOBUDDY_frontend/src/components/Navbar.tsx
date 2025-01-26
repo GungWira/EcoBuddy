@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../hooks/AuthContext";
+import { useAuth } from "../hooks/AuthProvider";
 
 export default function Navbar() {
   const [isMobileNavVisible, setMobileNavVisible] = useState(false);
@@ -53,13 +53,11 @@ export default function Navbar() {
   }, [sections]);
 
   // LOGIN
-  const auth = useContext(AuthContext);
+  const { isAuth, login, logout } = useAuth();
 
-  if (!auth) {
-    return null;
-  }
-
-  const { isAuthenticated, login, logout } = auth;
+  // if (!isAuth) {
+  //   return null;
+  // }
 
   return (
     <>
@@ -111,7 +109,7 @@ export default function Navbar() {
             ))}
           </div>
           <div className="hidden md:flex justify-end items-center flex-1">
-            {isAuthenticated ? (
+            {isAuth ? (
               <>
                 <button
                   onClick={logout}

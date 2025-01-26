@@ -1,17 +1,15 @@
 import React, { useContext } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { AuthContext } from "../hooks/AuthContext";
+import { useAuth } from "../hooks/AuthProvider";
 
 const ProtectedRoute: React.FC = () => {
-  const auth = useContext(AuthContext);
+  const { isAuth } = useAuth();
 
-  if (!auth) {
-    return null; // Pastikan konteks ada
-  }
+  // if (!isAuth) {
+  //   return null; // Pastikan konteks ada
+  // }
 
-  const { isAuthenticated } = auth;
-
-  return isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
+  return isAuth ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 export default ProtectedRoute;
