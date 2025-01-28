@@ -28,6 +28,7 @@ module {
           expPoints = currentUser.expPoints + expPoint;
           achievements = currentUser.achievements;
           avatar = currentUser.avatar;
+          profile = currentUser.profile;
         };
 
         // update data exp

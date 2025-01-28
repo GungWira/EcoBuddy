@@ -38,6 +38,7 @@ module {
                     expPoints = 0;
                     achievements = [];
                     avatar = GlobalConstants.AVATAR_BASIC;
+                    profile = GlobalConstants.PROFILE_DEFAULT;
                 };
 
                 users.put(userId, newUser);
@@ -46,34 +47,40 @@ module {
         };
     };
 
-    public func updateUser(
-        users : Types.Users,
-        userId : Principal,
-        username : Text,
-    ) : Result.Result<Types.User, Text> {
-        // CEK USER PRINCIPAL
+    public func updateUser(users : Types.Users, userId : Principal, data : Types.UserUpdateProfile) : async Result.Result<Types.User, Text> {
+        // auth
         if (Principal.isAnonymous(userId)) {
             return #err "Anonymous principals are not allowed";
         };
 
-        switch (users.get(userId)) {
-            // USER VALID
-            case (?userExist) {
+        // query data
+        let userData = users.get(userId);
 
+        // validate if exists
+        switch (userData) {
+            case (null) {
+                return #err "User not found";
+            };
+            case (?currentUser) {
                 let updatedUser : Types.User = {
-                    id = userExist.id;
-                    username = username;
-                    level = userExist.level;
-                    walletAddress = userExist.walletAddress;
-                    expPoints = userExist.expPoints;
-                    achievements = userExist.achievements;
-                    avatar = userExist.avatar;
+                    id = currentUser.id;
+                    username = switch (data.username) {
+                        case (null) { currentUser.username };
+                        case (?username) { username };
+                    };
+                    level = currentUser.level;
+                    walletAddress = currentUser.walletAddress;
+                    expPoints = currentUser.expPoints;
+                    achievements = currentUser.achievements;
+                    avatar = currentUser.avatar;
+                    profile = switch (data.profile) {
+                        case (null) { currentUser.profile };
+                        case (?profile) { profile };
+                    };
                 };
                 users.put(userId, updatedUser);
-                #ok updatedUser;
-            };
-            case null {
-                return #err "User not found";
+                
+                return #ok updatedUser;
             };
         };
     };

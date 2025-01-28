@@ -23,11 +23,18 @@ module {
     expPoints : Nat;
     achievements : [Text];
     avatar : Text;
+    profile: Text;
   };
 
   public type UserBalance = {
     id : Principal;
     balance : Nat;
+  };
+  
+
+  public type UserUpdateProfile = {
+    username : ?Text;
+    profile : ?Text;
   };
 
   // REQ TYPE
