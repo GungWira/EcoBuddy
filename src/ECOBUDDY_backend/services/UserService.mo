@@ -4,21 +4,22 @@ import Principal "mo:base/Principal";
 // import Random "mo:base/Random";
 
 import Types "../types/Types";
+import GlobalConstants "../constants/GlobalConstants";
 
 module {
     public func createUser(
         users : Types.Users,
         userId : Principal,
         walletAddress : Text,
-    ) : Result.Result<Types.User, Text> {
+    ) : async Result.Result<Types.User, Text> {
         // CEK USER PRINCIPAL
         if (Principal.isAnonymous(userId)) {
-            return #err("Anonymous principals are not allowed");
+            return #err "Anonymous principals are not allowed";
         };
 
         // CEK USER WALLET ADDRES
         if (Text.size(walletAddress) == 0) {
-            return #err("Wallet address cannot be empty");
+            return #err "Wallet address cannot be empty";
         };
 
         // CHECK USER ALLREADY EXIST
@@ -35,6 +36,8 @@ module {
                     level = 1;
                     walletAddress = walletAddress;
                     expPoints = 0;
+                    achievements = [];
+                    avatar = GlobalConstants.AVATAR_BASIC;
                 };
 
                 users.put(userId, newUser);
@@ -50,7 +53,7 @@ module {
     ) : Result.Result<Types.User, Text> {
         // CEK USER PRINCIPAL
         if (Principal.isAnonymous(userId)) {
-            return #err("Anonymous principals are not allowed");
+            return #err "Anonymous principals are not allowed";
         };
 
         switch (users.get(userId)) {
@@ -63,12 +66,14 @@ module {
                     level = userExist.level;
                     walletAddress = userExist.walletAddress;
                     expPoints = userExist.expPoints;
+                    achievements = userExist.achievements;
+                    avatar = userExist.avatar;
                 };
                 users.put(userId, updatedUser);
-                #ok(updatedUser);
+                #ok updatedUser;
             };
             case null {
-                return #err("User not found");
+                return #err "User not found";
             };
         };
     };

@@ -3,17 +3,18 @@ import Principal "mo:base/Principal";
 import Iter "mo:base/Iter";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
-import Debug "mo:base/Debug";
-import JSON "mo:json";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 
 import Types "types/Types";
 import UserService "services/UserService";
+import AiService "services/AiService";
+import ExpService "services/ExpService";
+import GlobalConstants "constants/GlobalConstants";
 
-import IC "ic:aaaaa-aa";
-import Cycles "mo:base/ExperimentalCycles";
-import Blob "mo:base/Blob";
+import Time "mo:base/Time";
+import Array "mo:base/Array";
+import Bool "mo:base/Bool";
 
 actor EcoBuddy {
   // DATA
@@ -23,12 +24,46 @@ actor EcoBuddy {
     Principal.hash,
   );
 
+  private var userLevel : Types.LevelDetails = HashMap.HashMap<Principal, Types.LevelDetail>(
+    10,
+    Principal.equal,
+    Principal.hash,
+  );
+
+  private var messageRecords : Types.Messages = HashMap.HashMap<Text, Types.Message>(
+    10,
+    Text.equal,
+    Text.hash,
+  );
+
+  private var avatarList : Types.Avatars = HashMap.HashMap<Text, Types.Avatar>(
+    10,
+    Text.equal,
+    Text.hash,
+  );
+
+  // fun talker achievement
+  private var EmojiCount = 0;
+
+  // knowledge seeker achievement
+  private var messageCount : Nat = 0;
+
+  // curious starter achievement
+  private var questionCount : Nat = 0;
+
+  public type AchievementList = {
+    #Conversation_Starter;
+    #Fun_Talker;
+    #Curious_Starter;
+    #Knowledge_Spreader;
+  };
+
+  private var AchievementCollected : [Text] = [];
+
   // DATA ENTRIES
   private stable var usersEntries : [(Principal, Types.User)] = [];
 
-  // DATA EXP
-  private var totalExp : Nat = 0;
-
+  // SYSTEM FUNCTION
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
     usersEntries := Iter.toArray(users.entries());
@@ -47,7 +82,7 @@ actor EcoBuddy {
   public shared (msg) func createUser(
     walletAddress : Text
   ) : async Result.Result<Types.User, Text> {
-    return UserService.createUser(users, msg.caller, walletAddress);
+    return await UserService.createUser(users, msg.caller, walletAddress);
   };
 
   public query func getUserById(userId : Principal) : async ?Types.User {
@@ -59,266 +94,398 @@ actor EcoBuddy {
   };
 
   // AI RESPONSE ------------------------------------------------------------------- AI RESPONSE
-  public query func transform({
-    context : Blob;
-    response : IC.http_request_result;
-  }) : async IC.http_request_result {
-    {
-      response with headers = []; // not intersted in the headers
-    };
-  };
-
-  //PULIC METHOD
   var passAnswer : Text = "";
-  public func askBot(input : Text) : async Text {
-    let _host : Text = "generativelanguage.googleapis.com";
-    let url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCOwAtmAGerXSaOM2281sBtplJ_f3c3TRY"; //HTTP that accepts IPV6
 
+  public func askBot(input : Text, userId : Principal) : async Result.Result<Types.ResponseAI, Text> {
+    let getAchievement = await checkAchievement(userId);
 
-    let idempotency_key : Text = generateUUID();
-    let request_headers = [
-      { name = "User-Agent"; value = "POST_USER_COMMAND" },
-      { name = "Content-Type"; value = "application/json" },
-      { name = "Idempotency-Key"; value = idempotency_key },
-    ];
-
-    let request_body_json : Text = "{ \"contents\": [ { \"parts\": [ { \"text\": \"Berikut adalah sebuah pesan dalam percakapan antara pengguna dan AI yang membahas topik lingkungan, khususnya pengelolaan sampah maupun kesehatan lingkungan. Fokus percakapan adalah pada prompt berikut: "# input #"\\n\\n User juga sebelumnya mendapatkan jawaban ini dari anda : "#passAnswer#"\\n\\n Anda bernama EcoBot, seorang personal asisten yang akan membantu user menjadi lebih baik dari segi pehamana lingkungan dan menuju dunia lebih bersih. Tugas Anda adalah memberikan evaluasi atau jawaban terhadap prompt tersebut dan memberikan respons dalam format JSON string yang valid, tanpa karakter tambahan seperti ```json atau ```. yang telah ditentukan. Pastikan untuk menyertakan:\\n\\n 1. Jika input tidak relevan dengan topik lingkungan atau isu sampah plastik (contoh: sapaan sederhana seperti \\\"halo\\\", \\\"apa kabar\\\", atau \\\"selamat pagi\\\"), berikan respons singkat berikut:\\n { \\\"response\\\": { \\\"solution\\\": \\\"Jawaban singkat juga kepada pengguna, dan silahkan tambahkan hooks atau umpan balik ke pengguna berupa pertanyaan singkat saja, misal jika user hanya menyapa maka silahkan sapa balik dan tanyakan seperti ingin berbuat baik tentnag lingkungan apa sekarang, dan sejenisnya anda bisa lakukan improvisasi disini\\\", \\\"expAmmount\\\": { \\\"point\\\": 0 } } }\\n\\n 2. Jika input relevan, jawab pertanyaan pengguna dengan singkat saja, pastikan gunakan bahasa yang ramah dan tidak terlalu baku, seperti anda berbicara dengan anak-anak, selalu ingat memberi umpan balik di akhir jawaban. Anda bisa menyertakan solusi atau ide praktis yang dapat diterapkan oleh pengguna terkait pertanyaan tersebut, seperti:\\n - Menjelaskan konteks atau latar belakang terkait isu sampah plastik.\\n - Memberikan metode yang dapat diterapkan dengan langkah-langkah rinci.\\n - Mengintegrasikan pendekatan kreatif, tradisional, dan berbasis kolaborasi komunitas jika memungkinkan.\\n - Menjelaskan dampak positif dari solusi, baik untuk individu maupun lingkungan.\\n - Membahas hasil jangka pendek dan panjang dari penerapan solusi.\\n - Mengulas realisme solusi, termasuk potensi tantangan dan cara mengatasinya.\\n - Menyertakan tips, alat, atau referensi tambahan yang relevan.\\n\\n Penilaian dampak positif terhadap lingkungan: Spekulasi tentang dampak implementasi solusi terhadap pengurangan sampah plastik, edukasi masyarakat, atau keterlibatan komunitas lokal.\\n Tinjau potensi pengurangan sampah plastik, inspirasi bagi orang lain, dan mendorong perubahan perilaku masyarakat.\\n\\n Penilaian realisme: Tinjau apakah solusi tersebut realistis untuk diterapkan oleh pengguna rata-rata dengan sumber daya terbatas. Pertimbangkan kesulitan teknis, biaya, waktu, dan keahlian yang dibutuhkan.\\n\\n Penilaian menariknya pertanyaan: Nilai potensi pertanyaan ini untuk memotivasi diskusi atau inovasi lebih lanjut terkait pengelolaan sampah plastik.\\n\\n Penambahan 'experience points' (EXP): Evaluasi dan berikan jumlah EXP kepada pengguna berdasarkan kriteria berikut:\\n - 25 EXP: Pertanyaan sangat spesifik, relevan, proaktif, dan kreatif.\\n - 15 EXP: Pertanyaan cukup spesifik dan relevan, namun kurang proaktif atau kreatif.\\n - 5 EXP: Pertanyaan umum tentang lingkungan.\\n - 0 EXP: Pertanyaan tidak relevan atau tidak memberikan kontribusi pada diskusi.\\n\\n Berikut adalah format respons dalam JSON STRING yang harus digunakan (jangan menambahkan informasi di luar format ini):\\n\\n { \\\"response\\\": { \\\"solution\\\": \\\"Jawaban komprehensif yang mencakup semua aspek yang diminta.\\\", \\\"expAmmount\\\": { \\\"point\\\": \\\"jumlah total EXP berdasarkan evaluasi di atas (0, 5, 15, 25).\\\" } } }\\n\\n Jika anda ingin memberikan highlight pada satu judul atau apapun itu, jangan gunakan tanda seperti ** atau sejenisnya, \" } ] } ] }";
-    
-    let request_body = Text.encodeUtf8(request_body_json);
-
-    let http_request : IC.http_request_args = {
-      url = url;
-      max_response_bytes = null;
-      headers = request_headers;
-      body = ?request_body;
-      method = #post;
-      transform = ?{
-        function = transform;
-        context = Blob.fromArray([]);
+    switch (getAchievement) {
+      case (false) {
+        return #err "User not found";
       };
-    };
+      case (true) {
+        var achievements : [Text] = [];
 
-    Cycles.add<system>(230_850_258_000);
+        let res = await AiService.httpReq(input, passAnswer);
+        let generatedUUID = AiService.generateUUID();
 
-    let http_response : IC.http_request_result = await IC.http_request(http_request);
-
-    let decoded_text : Text = switch (Text.decodeUtf8(http_response.body)) {
-      case (null) { "No value returned" };
-      case (?y) { y };
-    };
-
-    switch(JSON.parse(decoded_text)){
-      case(#err(e)){
-        Debug.print("Parse error: " # debug_show(e));
-        "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
-      };
-      case (#ok(data)){
-        // Debug.print(debug_show(data));
-        switch(JSON.get(data, "candidates[0].content.parts[0].text")){
-          case (null){
-            Debug.print("Field tidak ditemukan");
-            "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
-          };
-          case (?jsonString){
-            switch(jsonString){
-              case(#String(jsonText)){
-                switch (JSON.parse(jsonText)){
-                  case(#err(e)){
-                    Debug.print("Parse error: " # debug_show(e));
-                    "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
-                  };
-                  case(#ok(parsedJson)){
-                    let solution = switch(JSON.get(parsedJson, "response.solution")){
-                      case (null) { "Solution not found" };
-                      case (?value) { 
-                        switch (value) {
-                          case (#String(s)) { s };  // Convert JSON string to Text
-                          case _ { "Invalid Solution format" };  // In case it's not a string
-                        }
+        switch (res) {
+          case (#err(s)) { #err s };
+          case (#ok(result)) {
+            let addUserEXP = await addExp(Int.abs(result.exp), userId);
+            switch (addUserEXP) {
+              case (#err(_)) { #err("Error Adding User EXP") };
+              case (#ok(expOk)) {
+                var final = {
+                  solution = result.solution;
+                  exp = expOk;
+                };
+                // CONVERSATION STARTER ACHIEVEMENT
+                if (Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
+                  let conversation_starter_result = await unlockAchievement("Conversation_Starter", userId);
+                  switch (conversation_starter_result) {
+                    case (#err(_)) {};
+                    case (#ok(value)) {
+                      achievements := Array.append(achievements, [value]);
+                      final := {
+                        solution = result.solution;
+                        exp = result.exp;
+                        achievement = achievements;
                       };
                     };
-                    passAnswer := solution;
-                    let exp : Int = switch (JSON.get(parsedJson, "response.expAmmount.point")) {
-                      case (null) { 0 };  
-                      case (?value) {
-                        switch (value) {
-                          case (#Number(#Int(i))) { i };  
-                          case _ { 0 };  
-                        }
-                      };
-                    };
-
-                    // Debug.print("Solution: " # solution);
-                    // Debug.print(debug_show(exp));
-                    totalExp := totalExp + Int.abs(exp);
-
-                    solution;
                   };
                 };
+
+                // FUN TALKER ACHIEVEMENT
+                if ((Text.contains(result.solution, #text "🌱") or Text.contains(result.solution, #text "🌍")) and EmojiCount != 5) {
+                  EmojiCount += 1;
+                };
+
+                if (EmojiCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
+                  let fun_talker_result = await unlockAchievement("Fun_Talker", userId);
+                  switch (fun_talker_result) {
+                    case (#err(_)) {};
+                    case (#ok(value)) {
+                      achievements := Array.append(achievements, [value]);
+                      final := {
+                        solution = result.solution;
+                        exp = result.exp;
+                        achievement = achievements;
+                      };
+                    };
+                  };
+                };
+
+                // KNOWLEDGE SPREADER ACHIEVEMENT
+                if (messageCount < 10) {
+                  messageCount += 1;
+                };
+
+                if (messageCount >= 10 and Array.find<Text>(AchievementCollected, func(x) { x == "Knowledge_Spreader" }) == null) {
+                  let knowledge_spreader_result = await unlockAchievement("Knowledge_Spreader", userId);
+                  switch (knowledge_spreader_result) {
+                    case (#err(_)) {};
+                    case (#ok(value)) {
+                      achievements := Array.append(achievements, [value]);
+                      final := {
+                        solution = result.solution;
+                        exp = result.exp;
+                        achievement = achievements;
+                      };
+                    };
+                  };
+                };
+
+                // CURIOUS STARTER ACHIEVEMENT
+                if (Text.contains(input, #text "?") and questionCount < 5) {
+                  questionCount += 1;
+                };
+
+                if (questionCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Curious_Starter" }) == null) {
+                  let curious_starter_result = await unlockAchievement("Curious_Starter", userId);
+                  switch (curious_starter_result) {
+                    case (#err(_)) {};
+                    case (#ok(value)) {
+                      achievements := Array.append(achievements, [value]);
+                      final := {
+                        solution = result.solution;
+                        exp = result.exp;
+                        achievement = achievements;
+                      };
+                    };
+                  };
+                };
+
+                messageRecords.put(
+                  generatedUUID,
+                  {
+                    id = generatedUUID;
+                    sender = userId;
+                    content = input;
+                    timestamp = Time.now();
+                    messageType = #UserMessage;
+                  },
+                );
+
+                #ok final;
               };
-              case _{
-                Debug.print("'c' is not a string");
-                "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
-              }
             };
+
           };
         };
       };
     };
-  };
-
-  func generateUUID() : Text {
-    "UUID-123456789";
   };
 
   // EXP POINT ------------------------------------------------------------------- EXP POINT
-  public shared (msg) func addExp(expPoint : Nat) : async Result.Result<Nat, Text> {
+  public func addExp(expPoint : Nat, userId : Principal) : async Result.Result<Nat, Text> {
+    return await ExpService.addExpToChain(expPoint, userId, users);
+  };
+
+  public func getTotalExp(userId : Principal) : async Result.Result<Nat, Text> {
+    return await ExpService.totalExp(userId, users);
+  };
+
+  // LEVEL & ACHIEVEMENT-------------------------------------------------------------------- LEVEL & ACHIEVEMENT
+  public func calculateExpPerLevel(level : Nat) : async Nat {
+    if (level == 0) return 0;
+    if (level == 1) return 10;
+    return 100 * (level * level) - 90;
+  };
+
+  public func getUserLevelDetail(userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
     // auth
-    if (Principal.isAnonymous(msg.caller)) {
-      return #err("Anonymous principals are not allowed");
+    if (Principal.isAnonymous(userId)) {
+      return #err "Anonymous principals are not allowed";
     };
-    
+
     // query data
-    let user = users.get(msg.caller);
+    let userLevelDetail = userLevel.get(userId);
 
     // validate if exists
-    switch (user) {
-      case(null) {
-        #err("User not found");
+    switch (userLevelDetail) {
+      case (null) {
+        return #err "User not found";
       };
       case (?currentUser) {
-        let updatedUser : Types.User = {
-          id = currentUser.id;
-          username = currentUser.username;
-          level = currentUser.level;
-          walletAddress = currentUser.walletAddress;
-          expPoints = currentUser.expPoints + expPoint;
+        return #ok currentUser;
+      };
+    };
+
+  };
+
+  public func upgradeLevel(level : Nat, userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
+    // auth
+    if (Principal.isAnonymous(userId)) {
+      return #err "Anonymous principals are not allowed";
+    };
+
+    // query data
+    let userLevelDetail = userLevel.get(userId);
+
+    // validate if exists
+    switch (userLevelDetail) {
+      case (null) {
+        return #err "User not found";
+      };
+      case (?currentUser) {
+        let expPerLevel = await calculateExpPerLevel(level);
+        if (currentUser.currentExp >= expPerLevel) {
+          let updatedUserLevelDetail : Types.LevelDetail = {
+            userId = currentUser.userId;
+            avatar = currentUser.avatar;
+            nextLevel = currentUser.nextLevel + 1;
+            expToNextLevel = await calculateExpPerLevel(currentUser.nextLevel + 1);
+            currentExp = currentUser.currentExp - expPerLevel;
+          };
+
+          // update data exp
+          userLevel.put(userId, updatedUserLevelDetail);
+
+          // return exp amount
+          return #ok updatedUserLevelDetail;
+        } else {
+          return #err "Not enough EXP to upgrade level";
+        };
+      };
+    };
+  };
+
+  public func addAvatar(name : Text, image : Text) {
+    let avatarData : [(Text, Text)] = [("EPIC", GlobalConstants.AVATAR_EPIC), ("BASIC", GlobalConstants.AVATAR_BASIC), ("ELITE", GlobalConstants.AVATAR_ELITE), ("LEGEND", GlobalConstants.AVATAR_LEGEND), ("MYTHIC", GlobalConstants.AVATAR_MYTHIC)];
+
+    // Loop untuk setiap avatar default
+    for ((name, image) in avatarData.vals()) {
+      let avatarId : Text = AiService.generateUUID();
+      let avatarData = {
+        id = avatarId;
+        name = name;
+        avatar = image;
+        createdAt = Time.now();
+      };
+      avatarList.put(avatarId, avatarData);
+    };
+  };
+
+  public func unlockAvatar(level : Nat, userId : Principal) : async Result.Result<Text, Text> {
+    if (Principal.isAnonymous(userId)) {
+      return #err "Anonymous principals are not allowed";
+    };
+
+    let userData = users.get(userId);
+    switch (userData) {
+      case (null) {
+        return #err "User not found";
+      };
+      case (?currentUser) {
+        let avatarName = if (level >= 20) {
+          "MYTHIC";
+        } else if (level >= 15) {
+          "LEGEND";
+        } else if (level >= 10) {
+          "EPIC";
+        } else if (level >= 5) {
+          "ELITE";
+        } else if (level >= 1) {
+          "BASIC";
+        } else {
+          return #err "Invalid level";
         };
 
-        // update data exp
-        users.put(msg.caller, updatedUser);
-
-        // return exp amount
-        #ok(currentUser.expPoints);
+        let avatarData = avatarList.get(avatarName);
+        switch (avatarData) {
+          case (null) {
+            return #err "Avatar not found";
+          };
+          case (?avatar) {
+            let updatedUser = {
+              id = currentUser.id;
+              walletAddress = currentUser.walletAddress;
+              username = currentUser.username;
+              achievements = currentUser.achievements;
+              expPoints = currentUser.expPoints;
+              level = currentUser.level;
+              avatar = avatar.avatar;
+            };
+            users.put(userId, updatedUser);
+            return #ok(avatar.name);
+          };
+        };
       };
     };
   };
 
-  public shared (msg) func getTotalExp() : async Result.Result<Nat, Text> {
+  public func checkAchievement(userId : Principal) : async Bool {
     // auth
-    if (Principal.isAnonymous(msg.caller)) {
-      return #err("Anonymous principals are not allowed");
+    if (Principal.isAnonymous(userId)) {
+      return false;
     };
 
     // query data
-    let user = users.get(msg.caller);
+    let userData = users.get(userId);
 
     // validate if exists
-    switch (user) {
-      case(null) {
-        #err("User not found");
+    switch (userData) {
+      case (null) {
+        return false;
       };
       case (?currentUser) {
-        #ok(currentUser.expPoints);
+        AchievementCollected := currentUser.achievements;
+        return true;
       };
     };
   };
 
-  // // LEVEL ------------------------------------------------------------------- LEVEL
-  // public func getProgressToNextLevel() {
+  public func unlockAchievement(AchievementType : Text, userId : Principal) : async Result.Result<Text, Text> {
+    // auth
+    if (Principal.isAnonymous(userId)) {
+      return #err "Anonymous principals are not allowed";
+    };
 
-  // };
+    // query data
+    let userData = users.get(userId);
 
-  // public func getCurrentLevel(userId: Principal) {
+    // validate if exists
+    switch (userData) {
+      case (null) {
+        return #err "User not found";
+      };
+      case (?currentUser) {
+        let updatedAchievements = Array.append(currentUser.achievements, [AchievementType]);
+        let updatedUser = {
+          id = currentUser.id;
+          walletAddress = currentUser.walletAddress;
+          username = currentUser.username;
+          achievements = updatedAchievements;
+          expPoints = currentUser.expPoints;
+          level = currentUser.level;
+          avatar = currentUser.avatar;
+        };
+        users.put(userId, updatedUser);
 
-  // };
-
-  // public func upgradeLevelStatus() {
-
-  // };
-
-  // public func getLevelRequirements(level: Nat) {
-
-  // };
-
-  // public func unlockAvatar(level: Nat) {
-
-  // };
-
-  // // ACHIEVEMENT ------------------------------------------------------------------- ACHIEVEMENT
-  // public func createAchievement() {
-
-  // };
-
-  // public func getAchievements(userId: Principal) {
-
-  // };
-
-  // public func trackProgress(achievementId: Text) {
-
-  // };
-
-  // public func awardAchievement(userId: Principal, achievementId: Text) {
-
-  // };
-
-  
-  // calculateExperience(actions: [Action]): Calculate experience points
-  // upgradeLevelStatus(): Check and upgrade level if eligible
-  // getLevelRequirements(level: Nat): Get requirements for specific level
-  // getProgressToNextLevel(): Get progress towards next level
-  // getLevelHistory(): Get user's level progression history
-  // unlockLevelFeatures(level: Nat): Unlock features for current level
-  // checkLevelPrivileges(): Check available privileges for current level
-
-  // CHAT HISTORY ------------------------------------------------------------------- CHAT HISTORY
-
-
-  // registerUser(profile: UserProfile): Register new user with Internet Identity
-  // getProfile(userId: Principal): Retrieve user profile
-  // updateProfile(updates: ProfileUpdates): Update user profile information
-  // deleteAccount(): Delete user account and associated data
-  // getUserStats(): Get user statistics and activity metrics
-  // linkInternetIdentity(identity: Identity): Link Internet Identity to user account
-  // upgradeToPremuim(): Upgrade user account to premium status
-  // validateSession(): Validate current user session
-  // revokeSession(sessionId: Text): Revoke specific session
-  // listActiveSessions(): List all active user sessions
-
-  // Achievement Endpoints
-  // createAchievement(data: AchievementData): Create new achievement type
-  // getAchievements(userId: Principal): Get user's achievements
-  // trackProgress(achievementId: Text): Track progress towards achievement
-  // awardAchievement(userId: Principal, achievementId: Text): Award achievement to user
-  // validateAchievementCriteria(achievementId: Text): Validate achievement criteria
-  // claimReward(achievementId: Text): Claim reward for completed achievement
-  // getAvailableRewards(): List available rewards
-  // checkEligibility(rewardId: Text): Check eligibility for specific reward
-
-  // Analysis Endpoints
-  // getUserActivity(timeframe: Timeframe): Analyze user activity patterns
-  // getInteractionMetrics(): Get AI interaction metrics
-  // getEngagementScore(): Calculate user engagement score
-  // getPremiumUsageStats(): Analyze premium feature usage
-  // getPopularAvatar(): Analyze most used avatar
-
-  // Transaction Endpoints ( premium plan bisa membayar dengan token icp juga)
-  // initiatePayment(amount: Nat, currency: Text): Start payment process
-  // processICPPayment(paymentData: PaymentDetails): Process ICP payment
-  // verifyPayment(paymentId: Text): Verify payment completion
-  // refundPayment(paymentId: Text): Process refund
-  // getTransactionHistory(filter: TransactionFilter): Get transaction history
-  // getPaymentStatus(paymentId: Text): Check payment status
-  // generateInvoice(transactionId: Text): Generate invoice
-  // calculateFees(amount: Nat): Calculate transaction fees
-
-  // Level Endpoints ( Level 1, Level 2, Level 3, Level 4, Lavel 5 untuk kemajuan user dari achievement yang didapat dan keaktifan user dalam chatting di ai kita)
-  // getCurrentLevel(userId: Principal): Get user's current level
-  // calculateExperience(actions: [Action]): Calculate experience points
-  // upgradeLevelStatus(): Check and upgrade level if eligible
-  // getLevelRequirements(level: Nat): Get requirements for specific level
-  // getProgressToNextLevel(): Get progress towards next level
-  // getLevelHistory(): Get user's level progression history
-  // unlockLevelFeatures(level: Nat): Unlock features for current level
-  // checkLevelPrivileges(): Check available privileges for current level
+        return #ok AchievementType;
+      };
+    };
+  };
 };
+
+//todo set level ketika user register, set avatar ketika user register, set exp ketika user register
+
+// public func getLevelRequirements(level: Nat) {
+
+// };
+
+// // ACHIEVEMENT ------------------------------------------------------------------- ACHIEVEMENT
+// public func createAchievement() {
+
+// };
+
+// public func getAchievements(userId: Principal) {
+
+// };
+
+// public func trackProgress(achievementId: Text) {
+
+// };
+
+// public func awardAchievement(userId: Principal, achievementId: Text) {
+
+// };
+
+// calculateExperience(actions: [Action]): Calculate experience points
+// upgradeLevelStatus(): Check and upgrade level if eligible
+// getLevelRequirements(level: Nat): Get requirements for specific level
+// getProgressToNextLevel(): Get progress towards next level
+// getLevelHistory(): Get user's level progression history
+// unlockLevelFeatures(level: Nat): Unlock features for current level
+// checkLevelPrivileges(): Check available privileges for current level
+
+// CHAT HISTORY ------------------------------------------------------------------- CHAT HISTORY
+
+// registerUser(profile: UserProfile): Register new user with Internet Identity
+// getProfile(userId: Principal): Retrieve user profile
+// updateProfile(updates: ProfileUpdates): Update user profile information
+// deleteAccount(): Delete user account and associated data
+// getUserStats(): Get user statistics and activity metrics
+// linkInternetIdentity(identity: Identity): Link Internet Identity to user account
+// upgradeToPremuim(): Upgrade user account to premium status
+// validateSession(): Validate current user session
+// revokeSession(sessionId: Text): Revoke specific session
+// listActiveSessions(): List all active user sessions
+
+// Achievement Endpoints
+// createAchievement(data: AchievementData): Create new achievement type
+// getAchievements(userId: Principal): Get user's achievements
+// trackProgress(achievementId: Text): Track progress towards achievement
+// awardAchievement(userId: Principal, achievementId: Text): Award achievement to user
+// validateAchievementCriteria(achievementId: Text): Validate achievement criteria
+// claimReward(achievementId: Text): Claim reward for completed achievement
+// getAvailableRewards(): List available rewards
+// checkEligibility(rewardId: Text): Check eligibility for specific reward
+
+// Analysis Endpoints
+// getUserActivity(timeframe: Timeframe): Analyze user activity patterns
+// getInteractionMetrics(): Get AI interaction metrics
+// getEngagementScore(): Calculate user engagement score
+// getPremiumUsageStats(): Analyze premium feature usage
+// getPopularAvatar(): Analyze most used avatar
+
+// Transaction Endpoints ( premium plan bisa membayar dengan token icp juga)
+// initiatePayment(amount: Nat, currency: Text): Start payment process
+// processICPPayment(paymentData: PaymentDetails): Process ICP payment
+// verifyPayment(paymentId: Text): Verify payment completion
+// refundPayment(paymentId: Text): Process refund
+// getTransactionHistory(filter: TransactionFilter): Get transaction history
+// getPaymentStatus(paymentId: Text): Check payment status
+// generateInvoice(transactionId: Text): Generate invoice
+// calculateFees(amount: Nat): Calculate transaction fees
+
+// Level Endpoints ( Level 1, Level 2, Level 3, Level 4, Lavel 5 untuk kemajuan user dari achievement yang didapat dan keaktifan user dalam chatting di ai kita)
+// getCurrentLevel(userId: Principal): Get user's current level
+// calculateExperience(actions: [Action]): Calculate experience points
+// upgradeLevelStatus(): Check and upgrade level if eligible
+// getLevelRequirements(level: Nat): Get requirements for specific level
+// getProgressToNextLevel(): Get progress towards next level
+// getLevelHistory(): Get user's level progression history
+// unlockLevelFeatures(level: Nat): Unlock features for current level
+// checkLevelPrivileges(): Check available privileges for current level
