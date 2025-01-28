@@ -83,7 +83,6 @@ export const useAuthClient = (options = defaultOptions) => {
         });
 
         const result = await actor.createUser(accountIdentifier.toHex());
-
         if ("ok" in result) {
           setUser(result.ok);
         } else {
@@ -94,6 +93,7 @@ export const useAuthClient = (options = defaultOptions) => {
         setCallFunction(actor);
       } catch (error) {
         console.error("Error during initAuth:", error);
+        logout();
       } finally {
         setLoading(false);
       }

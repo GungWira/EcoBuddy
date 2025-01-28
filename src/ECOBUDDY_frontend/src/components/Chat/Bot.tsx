@@ -70,6 +70,10 @@ export default function Bot({
     }
   }, [hidden, loading]);
 
+  function countExp() {
+    level == 1 ? prog / 3 : (prog / (100 * level * level - 90)) * 100;
+  }
+
   return (
     <div
       className={`w-screen h-screen fixed top-0 left-0 bg-transparent z-50 flex justify-center items-center `}
@@ -121,7 +125,12 @@ export default function Bot({
             <div className="flex justify-start items-start w-full bg-whiteSoft h-1 rounded-full">
               <div
                 className={`prog bg-greenMain rounded-full h-1`}
-                style={{ width: prog <= 5 ? 5 : prog }}
+                style={{
+                  width:
+                    level == 1
+                      ? prog / 3 + "%"
+                      : (prog / 100) * level * level - 90 + "%",
+                }}
               ></div>
             </div>
           </div>

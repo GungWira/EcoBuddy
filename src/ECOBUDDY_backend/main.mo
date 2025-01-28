@@ -16,6 +16,7 @@ import Array "mo:base/Array";
 import Bool "mo:base/Bool";
 import LevelandAchievementService "services/LevelandAchievementService";
 
+
 actor EcoBuddy {
   // DATA
   private var users : Types.Users = HashMap.HashMap<Principal, Types.User>(
@@ -212,10 +213,6 @@ actor EcoBuddy {
             };
 
           };
-        };
-      };
-    };
-  };
 
 
   // EXP POINT ------------------------------------------------------------------- EXP POINT
@@ -264,7 +261,7 @@ actor EcoBuddy {
         AchievementCollected := currentUser.achievements;
         return true;
       };
-    };
+    }
   };
 
   public func unlockAchievement(AchievementType : Text, userId : Principal) : async Result.Result<Text, Text> {
@@ -273,5 +270,4 @@ actor EcoBuddy {
 
   // TRANSACTION & WALLET ------------------------------------------------------------------- TRANSACTION & WALLET
   
-
 };
