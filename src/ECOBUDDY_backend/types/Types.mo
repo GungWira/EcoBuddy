@@ -5,8 +5,10 @@ import Text "mo:base/Text";
 
 module {
   public type Users = HashMap.HashMap<Principal, User>;
-  public type UserBalances = HashMap.HashMap<Principal, UserBalance>;
   public type Messages = HashMap.HashMap<Text, Message>;
+  public type Avatars = HashMap.HashMap<Text, Avatar>;
+  public type UserBalances = HashMap.HashMap<Principal, UserBalance>;
+  public type LevelDetails = HashMap.HashMap<Principal, LevelDetail>;
   public type Transactions = HashMap.HashMap<Text, Transaction>;
   public type Tokens = HashMap.HashMap<Text, Token>;
   public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
@@ -20,11 +22,20 @@ module {
     level : Nat;
     walletAddress : Text;
     expPoints : Nat;
+    achievements : [Text];
+    avatar : Text;
+    profile: Text;
   };
 
   public type UserBalance = {
     id : Principal;
     balance : Nat;
+  };
+  
+
+  public type UserUpdateProfile = {
+    username : ?Text;
+    profile : ?Text;
   };
 
   // REQ TYPE
@@ -61,21 +72,21 @@ module {
     exp : Nat;
   };
 
-  // MESSAGE & CHAT TYPES
+  // CHAT RECORD AND HISTORY TYPE
   public type Message = {
     id : Text;
-    userId : Principal;
+    sender : Principal;
     content : Text;
     timestamp : Int;
     messageType : MessageType;
   };
 
-  private type MessageType = {
+  // Enum untuk tipe pesan
+  public type MessageType = {
     #UserMessage;
-    #AiMessage;
-    #SystemMessage;
   };
 
+  // Tipe untuk sesi chat
   public type ChatSession = {
     id : Text;
     userId : Principal;
@@ -84,10 +95,23 @@ module {
     updatedAt : Int;
   };
 
-  public type ChatRecord = {
-    session : ChatSession;
-    previousHash : ?Text;
-    currentHash : Text;
+  // Tipe untuk hash dan integritas
+
+  // LEVEL TYPES
+  public type LevelDetail = {
+    userId : Principal;
+    avatar : Avatar;
+    nextLevel : Nat;
+    expToNextLevel : Nat;
+    currentExp : Nat;
+  };
+
+  public type AchievementResponse = {
+    id : Text;
+    name : Text;
+    description : Text;
+    badge : Text;
+    claimedAt : Int;
   };
 
   // TRANSACTION TYPES
@@ -118,5 +142,12 @@ module {
   public type TokenMetadata = {
     tokenId : Text;
     metadata : Text;
+  };
+
+  // AVATAR TYPES
+  public type Avatar = {
+    name : Text;
+    avatar : Text;
+    createdAt : Int;
   };
 };
