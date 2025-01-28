@@ -45,6 +45,9 @@ export default {
         4: "4 4 0%",
         5: "5 5 0%",
       },
+      bottom: {
+        18: "4.5rem",
+      },
     },
   },
   plugins: [require("tailwind-scrollbar")],

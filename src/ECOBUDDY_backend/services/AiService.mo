@@ -11,7 +11,7 @@ import Types "../types/Types";
 
 
 module {
-    public func httpReq(input : Text, passAnswer : Text) : async Result.Result<Types.ResponseAI, Text> {
+    public func askBot(input : Text, passAnswer : Text) : async Result.Result<Types.ResponseAI, Text> {
         let url = "https://"# GlobalConstants.HOST # GlobalConstants.PATH # GlobalConstants.API_KEY; //HTTP that accepts IPV6
         let idempotency_key : Text = generateUUID();
 
@@ -49,10 +49,10 @@ module {
                 #err "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
             };
             case (#ok(data)){
-                Debug.print(debug_show(data));
                 switch(JSON.get(data, "candidates[0].content.parts[0].text")){
                 case (null){
                     Debug.print("Field tidak ditemukan");
+                    Debug.print(debug_show(data));
                     #err "Yah EcoBot gapaham maksud kamu! Jangan sedih, coba ketik ulang yuk yang kamu mau!";
                 };
                 case (?jsonString){
@@ -87,7 +87,6 @@ module {
                                 }
                             };
                             };
-                            // passAnswer := solution;
                             let exp : Int = switch (JSON.get(parsedJson, "response.expAmmount.point")) {
                             case (null) { 0 };  
                             case (?value) {
@@ -98,9 +97,6 @@ module {
                             };
                             };
 
-                            // Debug.print("Solution: " # solution);
-                            // Debug.print(debug_show(exp));
-                            // totalExp := totalExp + Int.abs(exp);
                             let response : Types.ResponseAI = {
                                 solution = solution;
                                 exp = Int.abs(exp);
@@ -120,6 +116,75 @@ module {
         };
     };
 
+    public func askQuiz(theme : Text) : async Text {
+        let url = "https://"# GlobalConstants.HOST # GlobalConstants.PATH # GlobalConstants.API_KEY; //HTTP that accepts IPV6
+        let idempotency_key : Text = generateUUID();
+
+        let request_headers = [
+            { name = "User-Agent"; value = "POST_USER_COMMAND" },
+            { name = "Content-Type"; value = "application/json" },
+            { name = "Idempotency-Key"; value = idempotency_key },
+        ];
+
+        let request_body_json : Text = "{ \"contents\": [ { \"parts\": [ { \"text\": \"Buatkan 10 soal tentang lingkungan dalam format kuis singkat dengan tema: "#theme#". Setiap soal memiliki 3 pilihan jawaban dan 1 jawaban benar. Tema soal adalah seputar lingkungan, dirancang untuk siswa SD-SMP, dan dibuat dari tingkat termudah hingga yang lebih sulit. Soalnya harus fun dan menambah wawasan. Format output dalam JSON seperti ini: { \\\"questions\\\": [ { \\\"question\\\": \\\"Apa nama tempat tinggal alami hewan?\\\", \\\"options\\\": [\\\"Kandang\\\", \\\"Habitat\\\", \\\"Sangkar\\\"], \\\"answer\\\": \\\"Habitat\\\", \\\"reason\\\": \\\"Habitat adalah lingkungan alami tempat hewan hidup.\\\" }, { \\\"question\\\": \\\"Pohon apa yang dikenal sebagai paru-paru dunia?\\\", \\\"options\\\": [\\\"Mangga\\\", \\\"Hutan Tropis\\\", \\\"Kelapa\\\"], \\\"answer\\\": \\\"Hutan Tropis\\\", \\\"reason\\\": \\\"Hutan tropis menghasilkan oksigen dalam jumlah besar untuk dunia.\\\" }, { \\\"question\\\": \\\"Apa yang sering digunakan untuk membuat kompos di rumah?\\\", \\\"options\\\": [\\\"Daun kering\\\", \\\"Plastik\\\", \\\"Kaca\\\"], \\\"answer\\\": \\\"Daun kering\\\", \\\"reason\\\": \\\"Daun kering dapat terurai secara alami dan membantu proses pembuatan kompos.\\\" }, { \\\"question\\\": \\\"Hewan apa yang dikenal sebagai indikator kebersihan lingkungan?\\\", \\\"options\\\": [\\\"Katak\\\", \\\"Burung\\\", \\\"Anjing\\\"], \\\"answer\\\": \\\"Katak\\\", \\\"reason\\\": \\\"Katak hanya hidup di lingkungan yang bersih dan bebas polusi.\\\" }, { \\\"question\\\": \\\"Apa yang bisa kita lakukan untuk mengurangi sampah plastik?\\\", \\\"options\\\": [\\\"Menggunakan tas kain\\\", \\\"Membuang di sungai\\\", \\\"Membakar plastik\\\"], \\\"answer\\\": \\\"Menggunakan tas kain\\\", \\\"reason\\\": \\\"Tas kain dapat digunakan berulang kali dan mengurangi penggunaan plastik sekali pakai.\\\" } ] } ingat, buat 10 soal saja dengan format seperti itu.\" } ] } ] }";
+
+        let request_body = Text.encodeUtf8(request_body_json);
+
+        let http_request : IC.http_request_args = {
+            url = url;
+            max_response_bytes = null;
+            headers = request_headers;
+            body = ?request_body;
+            method = #post;
+            transform = null
+        };
+
+        Cycles.add<system>(230_850_258_000);
+
+        let http_response : IC.http_request_result = await IC.http_request(http_request);
+
+        let decoded_text : Text = switch (Text.decodeUtf8(http_response.body)) {
+            case (null) { "No value returned" };
+            case (?y) { y };
+        };
+
+        switch(JSON.parse(decoded_text)){
+            case(#err(e)){
+                Debug.print("Parse error: " # debug_show(e));
+                "Error Generating Data";
+            };
+            case (#ok(data)){
+                switch(JSON.get(data, "candidates[0].content.parts[0].text")){
+                case (null){
+                    Debug.print("Field tidak ditemukan");
+                    "Error Generating Data";
+                };
+                case (?jsonString){
+                    switch(jsonString){
+                    case(#String(jsonText)){
+                        let validJsonText = switch(Text.startsWith(jsonText, #char '`')){
+                            
+                            case(true) {
+                                let withoutStart = Text.replace(jsonText, #text "```", "");
+                                let result = Text.replace(withoutStart, #text "json", "");
+                                result;
+                            };
+                            case (false){
+                                jsonText;
+                            };
+                        };
+                        validJsonText;
+                    };
+                    case _{
+                        Debug.print("'c' is not a string");
+                        "Error Generating Data";
+                    }
+                    };
+                };
+                };
+            };
+        };
+    };
 
     public func generateUUID() : Text {
         "UUID-123456789";

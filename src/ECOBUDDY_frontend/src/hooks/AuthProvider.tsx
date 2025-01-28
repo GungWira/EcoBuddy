@@ -7,6 +7,14 @@ import {
 import { Principal } from "@dfinity/principal";
 import { Identity } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
+import DailyQuest from "@/components/Chat/DailyQuest";
+
+interface DailyQuest {
+  date: string;
+  login: boolean;
+  chatCount: number;
+  quizCount: number;
+}
 
 interface AuthContextProps {
   isAuth: boolean;
@@ -19,6 +27,8 @@ interface AuthContextProps {
   updateUser: (updateUser: any) => void;
   user: any;
   loading: boolean;
+  dailyQuest: DailyQuest | null;
+  updateDailyQuest: (dailyQuest: DailyQuest) => void;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -32,6 +42,8 @@ const AuthContext = createContext<AuthContextProps>({
   updateUser: async () => {},
   user: null,
   loading: true,
+  dailyQuest: null,
+  updateDailyQuest: () => {},
 });
 
 const defaultOptions = {
@@ -53,6 +65,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [principal, setPrincipal] = useState<any>(null);
   const [callFunction, setCallFunction] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [dailyQuest, setDailyQuest] = useState<DailyQuest | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,6 +98,31 @@ export const useAuthClient = (options = defaultOptions) => {
         const result = await actor.createUser(accountIdentifier.toHex());
         if ("ok" in result) {
           setUser(result.ok);
+          const today = new Date()
+            .toLocaleDateString("id-ID", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })
+            .split("/")
+            .reverse()
+            .join("-");
+          const dq = await actor.checkDailyQuest(principal, today);
+          if ("ok" in dq) {
+            setDailyQuest({
+              date: dq.ok.date,
+              login: dq.ok.login,
+              chatCount: Number(dq.ok.chatCount),
+              quizCount: Number(dq.ok.quizCount),
+            });
+          } else {
+            setDailyQuest({
+              date: today,
+              login: false,
+              chatCount: 0,
+              quizCount: 0,
+            });
+          }
         } else {
           console.log("User are not verifed");
           logout();
@@ -134,6 +172,31 @@ export const useAuthClient = (options = defaultOptions) => {
 
           if ("ok" in result) {
             setUser(result.ok);
+            const today = new Date()
+              .toLocaleDateString("id-ID", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })
+              .split("/")
+              .reverse()
+              .join("-");
+            const dq = await actor.checkDailyQuest(principal, today);
+            if ("ok" in dq) {
+              setDailyQuest({
+                date: dq.ok.date,
+                login: dq.ok.login,
+                chatCount: Number(dq.ok.chatCount),
+                quizCount: Number(dq.ok.quizCount),
+              });
+            } else {
+              setDailyQuest({
+                date: today,
+                login: false,
+                chatCount: 0,
+                quizCount: 0,
+              });
+            }
           } else {
             console.log("User are not verifed");
             logout();
@@ -164,6 +227,10 @@ export const useAuthClient = (options = defaultOptions) => {
     setUser(updateUser);
   };
 
+  const updateDailyQuest = (updateDailyQuest: any) => {
+    setDailyQuest(updateDailyQuest);
+  };
+
   return {
     isAuth,
     login,
@@ -175,6 +242,8 @@ export const useAuthClient = (options = defaultOptions) => {
     user,
     loading,
     updateUser,
+    dailyQuest,
+    updateDailyQuest,
   };
 };
 

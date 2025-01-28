@@ -6,7 +6,7 @@ import Chat from "../pages/Chat";
 import Premium from "../pages/Chat/Premium";
 import ProtectedRoute from "./ProtectedRoute";
 import { useAuth } from "../hooks/AuthProvider";
-// import ProtectedRoute from "./ProtectedRoute";
+import Quiz from "../pages/Chat/Quiz";
 
 function Router() {
   const { isAuth } = useAuth();
@@ -21,14 +21,13 @@ function Router() {
         index
         element={isAuth ? <Navigate to="/chat" replace /> : <Home />}
       />
+      <Route path="/quiz" element={<Quiz />} />
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
         <Route path="/chat" element={<Chat />} />
         <Route path="/chat/premium" element={<Premium />} />
       </Route>
-      {/* <Route element={<ProtectedRoute redirectTo="/" />}>
-          
-        </Route> */}
+
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
