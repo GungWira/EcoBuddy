@@ -116,7 +116,7 @@ module {
         };
     };
 
-    public func askQuiz(theme : Text) : async Text {
+    public func askQuiz(theme : Text) : async Result.Result<Text, Text> {
         let url = "https://"# GlobalConstants.HOST # GlobalConstants.PATH # GlobalConstants.API_KEY; //HTTP that accepts IPV6
         let idempotency_key : Text = generateUUID();
 
@@ -126,7 +126,7 @@ module {
             { name = "Idempotency-Key"; value = idempotency_key },
         ];
 
-        let request_body_json : Text = "{ \"contents\": [ { \"parts\": [ { \"text\": \"Buatkan 10 soal tentang lingkungan dalam format kuis singkat dengan tema: "#theme#". Setiap soal memiliki 3 pilihan jawaban dan 1 jawaban benar. Tema soal adalah seputar lingkungan, dirancang untuk siswa SD-SMP, dan dibuat dari tingkat termudah hingga yang lebih sulit. Soalnya harus fun dan menambah wawasan. Format output dalam JSON seperti ini: { \\\"questions\\\": [ { \\\"question\\\": \\\"Apa nama tempat tinggal alami hewan?\\\", \\\"options\\\": [\\\"Kandang\\\", \\\"Habitat\\\", \\\"Sangkar\\\"], \\\"answer\\\": \\\"Habitat\\\", \\\"reason\\\": \\\"Habitat adalah lingkungan alami tempat hewan hidup.\\\" }, { \\\"question\\\": \\\"Pohon apa yang dikenal sebagai paru-paru dunia?\\\", \\\"options\\\": [\\\"Mangga\\\", \\\"Hutan Tropis\\\", \\\"Kelapa\\\"], \\\"answer\\\": \\\"Hutan Tropis\\\", \\\"reason\\\": \\\"Hutan tropis menghasilkan oksigen dalam jumlah besar untuk dunia.\\\" }, { \\\"question\\\": \\\"Apa yang sering digunakan untuk membuat kompos di rumah?\\\", \\\"options\\\": [\\\"Daun kering\\\", \\\"Plastik\\\", \\\"Kaca\\\"], \\\"answer\\\": \\\"Daun kering\\\", \\\"reason\\\": \\\"Daun kering dapat terurai secara alami dan membantu proses pembuatan kompos.\\\" }, { \\\"question\\\": \\\"Hewan apa yang dikenal sebagai indikator kebersihan lingkungan?\\\", \\\"options\\\": [\\\"Katak\\\", \\\"Burung\\\", \\\"Anjing\\\"], \\\"answer\\\": \\\"Katak\\\", \\\"reason\\\": \\\"Katak hanya hidup di lingkungan yang bersih dan bebas polusi.\\\" }, { \\\"question\\\": \\\"Apa yang bisa kita lakukan untuk mengurangi sampah plastik?\\\", \\\"options\\\": [\\\"Menggunakan tas kain\\\", \\\"Membuang di sungai\\\", \\\"Membakar plastik\\\"], \\\"answer\\\": \\\"Menggunakan tas kain\\\", \\\"reason\\\": \\\"Tas kain dapat digunakan berulang kali dan mengurangi penggunaan plastik sekali pakai.\\\" } ] } ingat, buat 10 soal saja dengan format seperti itu.\" } ] } ] }";
+        let request_body_json : Text = "{ \"contents\": [ { \"parts\": [ { \"text\": \"Buatkan 10 soal tentang lingkungan dalam format kuis singkat dengan tema: "# theme #". Setiap soal memiliki 3 pilihan jawaban dan 1 jawaban benar. Tema soal adalah seputar lingkungan, dirancang untuk siswa SD-SMA, dan dibuat dari tingkat termudah hingga yang lebih sulit. Soalnya harus fun dan menambah wawasan. Format output dalam JSON seperti ini: { \\\"questions\\\": [ { \\\"question\\\": \\\"Apa nama tempat tinggal alami hewan?\\\", \\\"options\\\": [\\\"Kandang\\\", \\\"Habitat\\\", \\\"Sangkar\\\"], \\\"answer\\\": \\\"Habitat\\\", \\\"reason\\\": \\\"Habitat adalah lingkungan alami tempat hewan hidup.\\\" }, { \\\"question\\\": \\\"Pohon apa yang dikenal sebagai paru-paru dunia?\\\", \\\"options\\\": [\\\"Mangga\\\", \\\"Hutan Tropis\\\", \\\"Kelapa\\\"], \\\"answer\\\": \\\"Hutan Tropis\\\", \\\"reason\\\": \\\"Hutan tropis menghasilkan oksigen dalam jumlah besar untuk dunia.\\\" }, { \\\"question\\\": \\\"Apa yang sering digunakan untuk membuat kompos di rumah?\\\", \\\"options\\\": [\\\"Daun kering\\\", \\\"Plastik\\\", \\\"Kaca\\\"], \\\"answer\\\": \\\"Daun kering\\\", \\\"reason\\\": \\\"Daun kering dapat terurai secara alami dan membantu proses pembuatan kompos.\\\" }, { \\\"question\\\": \\\"Hewan apa yang dikenal sebagai indikator kebersihan lingkungan?\\\", \\\"options\\\": [\\\"Katak\\\", \\\"Burung\\\", \\\"Anjing\\\"], \\\"answer\\\": \\\"Katak\\\", \\\"reason\\\": \\\"Katak hanya hidup di lingkungan yang bersih dan bebas polusi.\\\" }, { \\\"question\\\": \\\"Apa yang bisa kita lakukan untuk mengurangi sampah plastik?\\\", \\\"options\\\": [\\\"Menggunakan tas kain\\\", \\\"Membuang di sungai\\\", \\\"Membakar plastik\\\"], \\\"answer\\\": \\\"Menggunakan tas kain\\\", \\\"reason\\\": \\\"Tas kain dapat digunakan berulang kali dan mengurangi penggunaan plastik sekali pakai.\\\" } ] } ingat, buat 10 soal saja dengan format seperti itu.\" } ] } ] }";
 
         let request_body = Text.encodeUtf8(request_body_json);
 
@@ -151,13 +151,14 @@ module {
         switch(JSON.parse(decoded_text)){
             case(#err(e)){
                 Debug.print("Parse error: " # debug_show(e));
-                "Error Generating Data";
+                #err"Error Generating Data";
             };
             case (#ok(data)){
                 switch(JSON.get(data, "candidates[0].content.parts[0].text")){
                 case (null){
+                    Debug.print(debug_show(data));
                     Debug.print("Field tidak ditemukan");
-                    "Error Generating Data";
+                    #err"Error Generating Data";
                 };
                 case (?jsonString){
                     switch(jsonString){
@@ -173,11 +174,11 @@ module {
                                 jsonText;
                             };
                         };
-                        validJsonText;
+                        #ok validJsonText;
                     };
                     case _{
                         Debug.print("'c' is not a string");
-                        "Error Generating Data";
+                        #err"Error Generating Data";
                     }
                     };
                 };

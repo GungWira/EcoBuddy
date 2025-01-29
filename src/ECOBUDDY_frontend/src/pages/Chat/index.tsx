@@ -88,8 +88,6 @@ export default function Chat() {
   };
 
   const handlerChat = async () => {
-    // let wow = await callFunction.askQuiz("Botol plastik");
-    // let woww = JSON.parse(wow);
     if (userInput.trim() !== "" && isFinishTyping) {
       setIsGenerateAnswer(true);
       setIsFinishTyping(false);

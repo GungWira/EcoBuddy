@@ -10,9 +10,10 @@ import JSON "mo:json";
 import Types "types/Types";
 import UserService "services/UserService";
 import AiService "services/AiService";
+import DailyQuest "services/DailyQuest";
+import DailyQuiz "services/DailyQuiz";
 
 import Debug "mo:base/Debug";
-import DailyQuest "services/DailyQuest";
 
 actor EcoBuddy {
   // DATA
@@ -26,21 +27,30 @@ actor EcoBuddy {
     Principal.equal,
     Principal.hash,
   );
+  private var dailyQuizs : Types.DailyQuizs = HashMap.HashMap<Principal, Types.DailyQuiz>(
+    10,
+    Principal.equal,
+    Principal.hash,
+  );
 
   // DATA ENTRIES
   private stable var usersEntries : [(Principal, Types.User)] = [];
   private stable var dailyQuestsEntries : [(Principal, Types.DailyQuest)] = [];
+  private stable var dailyQuizsEntries : [(Principal, Types.DailyQuiz)] = [];
 
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
     usersEntries := Iter.toArray(users.entries());
     dailyQuestsEntries := Iter.toArray(dailyQuests.entries());
+    dailyQuizsEntries := Iter.toArray(dailyQuizs.entries());
   };
   system func postupgrade() {
     users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
     usersEntries := [];
     dailyQuests := HashMap.fromIter<Principal, Types.DailyQuest>(dailyQuestsEntries.vals(), 0, Principal.equal, Principal.hash);
     dailyQuestsEntries := [];
+    dailyQuizs := HashMap.fromIter<Principal, Types.DailyQuiz>(dailyQuizsEntries.vals(), 0, Principal.equal, Principal.hash);
+    dailyQuizsEntries := [];
   };
 
   // USERS ------------------------------------------------------------------ USERS
@@ -115,7 +125,7 @@ actor EcoBuddy {
     }
   };
 
-  public func askQuiz(theme : Text) : async Text {
+  public func askQuiz(theme : Text) : async Result.Result <Text, Text> {
     let res = await AiService.askQuiz(theme);
     res;
   };
@@ -147,7 +157,42 @@ actor EcoBuddy {
       };
     };
   };
-  // public func  
+
+  // DAILY QUIZZ ------------------------------------------------------------------- DAILY QUIZZ
+  public shared func getDailyQuizs (userId : Principal, date : Text, id1 : Text, id2 : Text, id3 : Text ) : async Result.Result<Types.DailyQuiz, Text> {
+    let userQuiz = await DailyQuiz.getDailyQuizs(userId, date, dailyQuizs, id1, id2, id3);
+    switch(userQuiz){
+      case (#ok (valid)){
+        #ok valid;
+      };
+      case(#err(t)){
+        #err t
+      };
+    };
+  };
+
+  public shared func submitDailyQuiz (userId : Principal, id : Text, exp : Text) : async Result.Result<Types.DailyQuiz, Text>{
+    let userQuiz = await DailyQuiz.submitDailyQuiz(userId, id, dailyQuizs);
+    
+    switch(userQuiz){
+      case (#ok (valid)){
+        let expUser = switch(Nat.fromText(exp)){
+          case (?isNat){
+            isNat
+          };
+          case (null){
+            0
+          };
+        };
+        let addExpUser = await addExp(expUser, userId);
+        Debug.print(debug_show(addExpUser));
+        #ok valid;
+      };
+      case(#err(t)){
+        #err t
+      };
+    };
+  };
 
   // EXP POINT ------------------------------------------------------------------- EXP POINT
   public shared func addExp(expPoint : Nat, userId : Principal) : async Result.Result<Nat, Text> {

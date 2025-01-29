@@ -16,7 +16,7 @@ export default function Menu({ onClick }: MenuProps) {
         />
         <div className="flex flex-row justify-start items-start gap-6 px-6 py-2 bg-darkSoft absolute -bottom-16 translate-y-2 right-0 rounded-xl opacity-0 group-hover:opacity-100">
           <Link
-            to={"/"}
+            to={"/quiz"}
             className="flex flex-col justify-center items-center gap-1"
           >
             <div className="w-8 aspect-square overflow-hidden">

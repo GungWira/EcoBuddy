@@ -13,8 +13,8 @@ module {
   public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
   // DAILY QUEST
   public type DailyQuests = HashMap.HashMap<Principal, DailyQuest>;
-
-
+  // DAILY QUIZ
+  public type DailyQuizs = HashMap.HashMap<Principal, DailyQuiz>;
 
   // USER TYPE
   public type User = {
@@ -64,6 +64,17 @@ module {
     login : Bool;
     chatCount : Nat;
     quizCount : Nat;
+  };
+
+  // DAILY QUIZ
+  public type DailyQuiz = {
+    date : Text;
+    quizNum1 : Text;
+    quizNum2 : Text;
+    quizNum3 : Text;
+    statQuizNum1 : Bool;
+    statQuizNum2 : Bool;
+    statQuizNum3 : Bool;
   };
 
   // AI TYPE
