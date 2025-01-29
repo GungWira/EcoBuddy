@@ -9,10 +9,9 @@ import Types "../types/Types";
 import AiService "AiService";
 import GlobalConstants "../constants/GlobalConstants";
 
-
 module {
-  
-  public func handleGetUserLevelDetail(userId : Principal, userLevel: Types.LevelDetails) : async Result.Result<Types.LevelDetail, Text> {
+
+  public func handleGetUserLevelDetail(userId : Principal, userLevel : Types.LevelDetails) : async Result.Result<Types.LevelDetail, Text> {
     // auth
     if (Principal.isAnonymous(userId)) {
       return #err "Anonymous principals are not allowed";
@@ -32,7 +31,7 @@ module {
     };
   };
 
- public func handleUpgradeLevel(level : Nat, userId : Principal, userLevel: Types.LevelDetails) : async Result.Result<Types.LevelDetail, Text> {
+  public func handleUpgradeLevel(level : Nat, userId : Principal, userLevel : Types.LevelDetails, users : Types.Users) : async Result.Result<Types.LevelDetail, Text> {
     // auth
     if (Principal.isAnonymous(userId)) {
       return #err "Anonymous principals are not allowed";
@@ -40,36 +39,56 @@ module {
 
     // query data
     let userLevelDetail = userLevel.get(userId);
+    let usersdata = users.get(userId);
 
     // validate if exists
     switch (userLevelDetail) {
       case (null) {
-        return #err "User not found";
+        return #err "User level details not found";
       };
       case (?currentUser) {
-        let expPerLevel = await calculateExpPerLevel(level);
-        if (currentUser.currentExp >= expPerLevel) {
-          let updatedUserLevelDetail : Types.LevelDetail = {
-            userId = currentUser.userId;
-            avatar = currentUser.avatar;
-            nextLevel = currentUser.nextLevel + 1;
-            expToNextLevel = await calculateExpPerLevel(currentUser.nextLevel + 1);
-            currentExp = currentUser.currentExp - expPerLevel;
+        switch (usersdata) {
+          case (null) {
+            return #err "User not found";
           };
+          case (?userData) {
+            let expPerLevel = await calculateExpPerLevel(level);
+            if (currentUser.currentExp >= expPerLevel) {
+              let updatedUserLevelDetail : Types.LevelDetail = {
+                userId = currentUser.userId;
+                avatar = currentUser.avatar;
+                nextLevel = currentUser.nextLevel + 1;
+                expToNextLevel = await calculateExpPerLevel(currentUser.nextLevel + 1);
+                currentExp = currentUser.currentExp - expPerLevel;
+              };
 
-          // update data exp
-          userLevel.put(userId, updatedUserLevelDetail);
+              let usersUpdatedData : Types.User = {
+                id = userData.id;
+                username = userData.username;
+                walletAddress = userData.walletAddress;
+                achievements = userData.achievements;
+                expPoints = userData.expPoints;
+                level = userData.level + 1;
+                avatar = userData.avatar;
+                profile = userData.profile;
+              };
 
-          // return exp amount
-          return #ok updatedUserLevelDetail;
-        } else {
-          return #err "Not enough EXP to upgrade level";
+              // update data exp
+              userLevel.put(userId, updatedUserLevelDetail);
+              users.put(userId, usersUpdatedData);
+
+              // return exp amount
+              return #ok updatedUserLevelDetail;
+            } else {
+              return #err "Not enough EXP to upgrade level";
+            };
+          };
         };
       };
     };
   };
 
-  public func handleAddAvatar(name : Text, image : Text, avatarList : Types.Avatars): async Text {
+  public func handleAddAvatar(avatarList : Types.Avatars) : async Text {
     let avatarData : [(Text, Text)] = [("EPIC", GlobalConstants.AVATAR_EPIC), ("BASIC", GlobalConstants.AVATAR_BASIC), ("ELITE", GlobalConstants.AVATAR_ELITE), ("LEGEND", GlobalConstants.AVATAR_LEGEND), ("MYTHIC", GlobalConstants.AVATAR_MYTHIC)];
 
     // Loop untuk setiap avatar default
@@ -87,7 +106,7 @@ module {
     return "Avatar added successfully";
   };
 
-  public func handleUnlockAvatar(level : Nat, userId : Principal, users: Types.Users, avatarList : Types.Avatars) : async Result.Result<Text, Text> {
+  public func handleUnlockAvatar(level : Nat, userId : Principal, users : Types.Users, avatarList : Types.Avatars) : async Result.Result<Text, Text> {
     if (Principal.isAnonymous(userId)) {
       return #err "Anonymous principals are not allowed";
     };
@@ -136,7 +155,7 @@ module {
     };
   };
 
-  public func handleUnlockAchievement(AchievementType : Text, userId : Principal, users: Types.Users) : async Result.Result<Text, Text> {
+  public func handleUnlockAchievement(AchievementType : Text, userId : Principal, users : Types.Users) : async Result.Result<Text, Text> {
     // auth
     if (Principal.isAnonymous(userId)) {
       return #err "Anonymous principals are not allowed";
@@ -171,9 +190,6 @@ module {
 
   // HELPER FUNCTION
   public func calculateExpPerLevel(level : Nat) : async Nat {
-    if (level == 0) return 0;
-    if (level == 1) return 10;
-    return 100 * (level * level) - 90;
+    return 100 * (level * level) - 100;
   };
-
-}
+};
