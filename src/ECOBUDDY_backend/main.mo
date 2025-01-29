@@ -231,12 +231,12 @@ actor EcoBuddy {
   };
 
   public func upgradeLevel(level : Nat, userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
-    return await LevelandAchievementService.handleUpgradeLevel(level, userId, userLevel);
+    return await LevelandAchievementService.handleUpgradeLevel(level, userId, userLevel, users);
   };
 
   // RUN THIS FUNCTION WHEN CANISTER IS DEPLOYED
-  public func addAvatar(name : Text, image : Text) : async Text {
-    return await LevelandAchievementService.handleAddAvatar(name, image, avatarList);
+  public func addAvatar() : async Text {
+    return await LevelandAchievementService.handleAddAvatar(avatarList);
   };
 
   public func unlockAvatar(level : Nat, userId : Principal) : async Result.Result<Text, Text> {
@@ -269,5 +269,7 @@ actor EcoBuddy {
   };
 
   // TRANSACTION & WALLET ------------------------------------------------------------------- TRANSACTION & WALLET
-  
+  // public func getUserBalance(userId: Principal): async Nat {
+
+  // };
 };
