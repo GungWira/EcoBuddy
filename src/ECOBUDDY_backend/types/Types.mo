@@ -14,6 +14,7 @@ module {
   public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
   public type TokenMetadatas = HashMap.HashMap<Text, TokenMetadata>;
 
+
   // USER TYPE
   public type User = {
     id : Principal;
