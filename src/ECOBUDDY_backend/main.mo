@@ -73,7 +73,6 @@ actor EcoBuddy {
     usersEntries := [];
   };
 
-
   // USERS ------------------------------------------------------------------ USERS
   public query (message) func getPrincipal() : async Principal {
     message.caller;
@@ -89,27 +88,22 @@ actor EcoBuddy {
     return users.get(userId);
   };
 
-  public shared (msg) func updateUser(data: Types.UserUpdateProfile) : async Result.Result<Types.User, Text> {
+  public shared (msg) func updateUser(data : Types.UserUpdateProfile) : async Result.Result<Types.User, Text> {
     return await UserService.updateUser(users, msg.caller, data);
   };
-
 
   // AI RESPONSE ------------------------------------------------------------------- AI RESPONSE
   var passAnswer : Text = "";
 
   public func askBot(input : Text, userId : Principal) : async Result.Result<Types.ResponseAI, Text> {
-    let getAchievement = await checkAchievement(userId);
 
-    switch (getAchievement) {
-      case (false) {
-        return #err "User not found";
-      };
-      case (true) {
-        var achievements : [Text] = [];
+    let res = await AiService.httpReq(input, passAnswer);
+    let generatedUUID = AiService.generateUUID();
+    let userData = users.get(userId);
 
-        let res = await AiService.httpReq(input, passAnswer);
-        let generatedUUID = AiService.generateUUID();
-
+    switch (userData) {
+      case (null) { #err("User not found") };
+      case (?currentUser) {
         switch (res) {
           case (#err(s)) { #err s };
           case (#ok(result)) {
@@ -120,81 +114,6 @@ actor EcoBuddy {
                 var final = {
                   solution = result.solution;
                   exp = expOk;
-                };
-                // CONVERSATION STARTER ACHIEVEMENT
-                if (Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
-                  let conversation_starter_result = await unlockAchievement("Conversation_Starter", userId);
-                  switch (conversation_starter_result) {
-                    case (#err(_)) {};
-                    case (#ok(value)) {
-                      achievements := Array.append(achievements, [value]);
-                      final := {
-                        solution = result.solution;
-                        exp = result.exp;
-                        achievement = achievements;
-                      };
-                    };
-                  };
-                };
-
-                // FUN TALKER ACHIEVEMENT
-                if ((Text.contains(result.solution, #text "🌱") or Text.contains(result.solution, #text "🌍")) and EmojiCount != 5) {
-                  EmojiCount += 1;
-                };
-
-                if (EmojiCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
-                  let fun_talker_result = await unlockAchievement("Fun_Talker", userId);
-                  switch (fun_talker_result) {
-                    case (#err(_)) {};
-                    case (#ok(value)) {
-                      achievements := Array.append(achievements, [value]);
-                      final := {
-                        solution = result.solution;
-                        exp = result.exp;
-                        achievement = achievements;
-                      };
-                    };
-                  };
-                };
-
-                // KNOWLEDGE SPREADER ACHIEVEMENT
-                if (messageCount < 10) {
-                  messageCount += 1;
-                };
-
-                if (messageCount >= 10 and Array.find<Text>(AchievementCollected, func(x) { x == "Knowledge_Spreader" }) == null) {
-                  let knowledge_spreader_result = await unlockAchievement("Knowledge_Spreader", userId);
-                  switch (knowledge_spreader_result) {
-                    case (#err(_)) {};
-                    case (#ok(value)) {
-                      achievements := Array.append(achievements, [value]);
-                      final := {
-                        solution = result.solution;
-                        exp = result.exp;
-                        achievement = achievements;
-                      };
-                    };
-                  };
-                };
-
-                // CURIOUS STARTER ACHIEVEMENT
-                if (Text.contains(input, #text "?") and questionCount < 5) {
-                  questionCount += 1;
-                };
-
-                if (questionCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Curious_Starter" }) == null) {
-                  let curious_starter_result = await unlockAchievement("Curious_Starter", userId);
-                  switch (curious_starter_result) {
-                    case (#err(_)) {};
-                    case (#ok(value)) {
-                      achievements := Array.append(achievements, [value]);
-                      final := {
-                        solution = result.solution;
-                        exp = result.exp;
-                        achievement = achievements;
-                      };
-                    };
-                  };
                 };
 
                 messageRecords.put(
@@ -208,12 +127,17 @@ actor EcoBuddy {
                   },
                 );
 
+                let _ = await checkAchievement(userId, currentUser, result.solution, input);
+
                 #ok final;
               };
             };
 
           };
-
+        };
+      };
+    };
+  };
 
   // EXP POINT ------------------------------------------------------------------- EXP POINT
   public func addExp(expPoint : Nat, userId : Principal) : async Result.Result<Nat, Text> {
@@ -224,10 +148,9 @@ actor EcoBuddy {
     return await ExpService.totalExp(userId, users);
   };
 
-
   // LEVEL & ACHIEVEMENT-------------------------------------------------------------------- LEVEL & ACHIEVEMENT
   public func getUserLevelDetail(userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
-   return await LevelandAchievementService.handleGetUserLevelDetail(userId, userLevel);
+    return await LevelandAchievementService.handleGetUserLevelDetail(userId, userLevel);
   };
 
   public func upgradeLevel(level : Nat, userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
@@ -243,7 +166,7 @@ actor EcoBuddy {
     return await LevelandAchievementService.handleUnlockAvatar(level, userId, users, avatarList);
   };
 
-  public func checkAchievement(userId : Principal) : async Bool {
+  private func getAchievement(userId : Principal) : async Bool {
     // auth
     if (Principal.isAnonymous(userId)) {
       return false;
@@ -264,6 +187,87 @@ actor EcoBuddy {
     }
   };
 
+  public func checkAchievement(userId : Principal, currentUser : Types.User, solution : Text, input : Text) : async Bool {
+    var achievements : [Text] = [];
+    let achievementResult = await getAchievement(userId);
+
+    if (achievementResult) {
+      // CONVERSATION STARTER ACHIEVEMENT
+      if (Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
+        let conversation_starter_result = await unlockAchievement("Conversation_Starter", userId);
+        switch (conversation_starter_result) {
+          case (#err(_)) {};
+          case (#ok(value)) {
+            achievements := Array.append(achievements, [value]);
+          };
+        };
+      };
+
+      // FUN TALKER ACHIEVEMENT
+      if ((Text.contains(solution, #text "🌱") or Text.contains(solution, #text "🌍")) and EmojiCount != 5) {
+        EmojiCount += 1;
+      };
+
+      if (EmojiCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
+        let fun_talker_result = await unlockAchievement("Fun_Talker", userId);
+        switch (fun_talker_result) {
+          case (#err(_)) {};
+          case (#ok(value)) {
+            achievements := Array.append(achievements, [value]);
+          };
+        };
+      };
+
+      // KNOWLEDGE SPREADER ACHIEVEMENT
+      if (messageCount < 10) {
+        messageCount += 1;
+      };
+
+      if (messageCount >= 10 and Array.find<Text>(AchievementCollected, func(x) { x == "Knowledge_Spreader" }) == null) {
+        let knowledge_spreader_result = await unlockAchievement("Knowledge_Spreader", userId);
+        switch (knowledge_spreader_result) {
+          case (#err(_)) {};
+          case (#ok(value)) {
+            achievements := Array.append(achievements, [value]);
+          };
+        };
+      };
+
+      // CURIOUS STARTER ACHIEVEMENT
+      if (Text.contains(input, #text "?") and questionCount < 5) {
+        questionCount += 1;
+      };
+
+      if (questionCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Curious_Starter" }) == null) {
+        let curious_starter_result = await unlockAchievement("Curious_Starter", userId);
+        switch (curious_starter_result) {
+          case (#err(_)) {};
+          case (#ok(value)) {
+            achievements := Array.append(achievements, [value]);
+          };
+        };
+      };
+
+      // update users type
+      let updatedUser = {
+        id = currentUser.id;
+        walletAddress = currentUser.walletAddress;
+        username = currentUser.username;
+        achievements = achievements;
+        expPoints = currentUser.expPoints;
+        level = currentUser.level;
+        avatar = currentUser.avatar;
+        profile = currentUser.profile;
+      };
+
+      users.put(userId, updatedUser);
+
+      return true;
+    } else {
+      return false;
+    };
+  };
+
   public func unlockAchievement(AchievementType : Text, userId : Principal) : async Result.Result<Text, Text> {
     return await LevelandAchievementService.handleUnlockAchievement(AchievementType, userId, users);
   };
@@ -273,3 +277,4 @@ actor EcoBuddy {
 
   // };
 };
+
