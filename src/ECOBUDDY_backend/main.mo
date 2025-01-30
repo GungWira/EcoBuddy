@@ -251,15 +251,6 @@ actor EcoBuddy {
   };
 
   // LEVEL & ACHIEVEMENT-------------------------------------------------------------------- LEVEL & ACHIEVEMENT
-  // RUN THIS FUNCTION WHEN CANISTER IS DEPLOYED
-  public func addAvatar() : async Text {
-    return await LevelandAchievementService.handleAddAvatar(avatarList);
-  };
-
-  public func unlockAvatar(level : Nat, userId : Principal) : async Result.Result<Text, Text> {
-    return await LevelandAchievementService.handleUnlockAvatar(level, userId, users, avatarList);
-  };
-
   private func getAchievement(userId : Principal) : async Bool {
     // auth
     if (Principal.isAnonymous(userId)) {
