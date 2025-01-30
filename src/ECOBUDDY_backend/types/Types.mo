@@ -2,6 +2,7 @@ import HashMap "mo:base/HashMap";
 import Principal "mo:base/Principal";
 import Nat "mo:base/Nat";
 import Text "mo:base/Text";
+import Bool "mo:base/Bool";
 
 module {
   public type Users = HashMap.HashMap<Principal, User>;
@@ -12,8 +13,10 @@ module {
   public type Transactions = HashMap.HashMap<Text, Transaction>;
   public type Tokens = HashMap.HashMap<Text, Token>;
   public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
-  public type TokenMetadatas = HashMap.HashMap<Text, TokenMetadata>;
-
+  // DAILY QUEST
+  public type DailyQuests = HashMap.HashMap<Principal, DailyQuest>;
+  // DAILY QUIZ
+  public type DailyQuizs = HashMap.HashMap<Principal, DailyQuiz>;
 
   // USER TYPE
   public type User = {
@@ -66,13 +69,44 @@ module {
     value : Text;
   };
 
+  // DAILY QUEST
+  public type DailyQuest = {
+    date : Text;
+    login : Bool;
+    chatCount : Nat;
+    quizCount : Nat;
+  };
+
+  // DAILY QUIZ
+  public type DailyQuiz = {
+    date : Text;
+    quizNum1 : Text;
+    quizNum2 : Text;
+    quizNum3 : Text;
+    statQuizNum1 : Bool;
+    statQuizNum2 : Bool;
+    statQuizNum3 : Bool;
+  };
+
   // AI TYPE
   public type ResponseAI = {
     solution : Text;
     exp : Nat;
   };
 
+  public type ResponseQuiz = {
+    questions : [
+      {
+        question : Text;
+        options : [Text];
+        answer : Text;
+        reason : Text
+      }
+    ];
+  };
+  
   // CHAT RECORD AND HISTORY TYPE
+
   public type Message = {
     id : Text;
     sender : Principal;

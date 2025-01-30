@@ -5,21 +5,34 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
-
-import Types "types/Types";
-import UserService "services/UserService";
-import AiService "services/AiService";
-import ExpService "services/ExpService";
-
+import JSON "mo:json";
 import Time "mo:base/Time";
 import Array "mo:base/Array";
 import Bool "mo:base/Bool";
+
+import UserService "services/UserService";
+import AiService "services/AiService";
+import DailyQuest "services/DailyQuest";
+import DailyQuiz "services/DailyQuiz";
+import ExpService "services/ExpService";
 import LevelandAchievementService "services/LevelandAchievementService";
+
+import Types "types/Types";
 
 
 actor EcoBuddy {
   // DATA
   private var users : Types.Users = HashMap.HashMap<Principal, Types.User>(
+    10,
+    Principal.equal,
+    Principal.hash,
+  );
+  private var dailyQuests : Types.DailyQuests = HashMap.HashMap<Principal, Types.DailyQuest>(
+    10,
+    Principal.equal,
+    Principal.hash,
+  );
+  private var dailyQuizs : Types.DailyQuizs = HashMap.HashMap<Principal, Types.DailyQuiz>(
     10,
     Principal.equal,
     Principal.hash,
@@ -63,14 +76,22 @@ actor EcoBuddy {
 
   // DATA ENTRIES
   private stable var usersEntries : [(Principal, Types.User)] = [];
+  private stable var dailyQuestsEntries : [(Principal, Types.DailyQuest)] = [];
+  private stable var dailyQuizsEntries : [(Principal, Types.DailyQuiz)] = [];
 
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
     usersEntries := Iter.toArray(users.entries());
+    dailyQuestsEntries := Iter.toArray(dailyQuests.entries());
+    dailyQuizsEntries := Iter.toArray(dailyQuizs.entries());
   };
   system func postupgrade() {
     users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
     usersEntries := [];
+    dailyQuests := HashMap.fromIter<Principal, Types.DailyQuest>(dailyQuestsEntries.vals(), 0, Principal.equal, Principal.hash);
+    dailyQuestsEntries := [];
+    dailyQuizs := HashMap.fromIter<Principal, Types.DailyQuiz>(dailyQuizsEntries.vals(), 0, Principal.equal, Principal.hash);
+    dailyQuizsEntries := [];
   };
 
   // USERS ------------------------------------------------------------------ USERS
@@ -92,11 +113,10 @@ actor EcoBuddy {
     return await UserService.updateUser(users, msg.caller, data);
   };
 
-  // AI RESPONSE ------------------------------------------------------------------- AI RESPONSE
+  // AI ------------------------------------------------------------------- AI
   var passAnswer : Text = "";
 
   public func askBot(input : Text, userId : Principal) : async Result.Result<Types.ResponseAI, Text> {
-
     let res = await AiService.httpReq(input, passAnswer);
     let generatedUUID = AiService.generateUUID();
     let userData = users.get(userId);
@@ -105,13 +125,29 @@ actor EcoBuddy {
       case (null) { #err("User not found") };
       case (?currentUser) {
         switch (res) {
-          case (#err(s)) { #err s };
+          case(#err(s)) { 
+            passAnswer := "";
+            #err s 
+          };
           case (#ok(result)) {
-            let addUserEXP = await addExp(Int.abs(result.exp), userId);
+            // ADD QUEST
+            let userDailyQuest = await DailyQuest.addChatCount(userId, dailyQuests);
+            let expQuest = switch(userDailyQuest){
+              case(#ok(userDailyQuestValid)){
+                if(userDailyQuestValid.chatCount == 10){ 20 }else{ 0 }
+              };
+              case (_){
+                0
+              };
+            };
+            
+            // ADD USER EXP
+            let addUserEXP = await addExp(Int.abs(result.exp + expQuest), userId);
             switch (addUserEXP) {
               case (#err(_)) { #err("Error Adding User EXP") };
               case (#ok(expOk)) {
-                var final = {
+                passAnswer := result.solution;
+                let final = {
                   solution = result.solution;
                   exp = expOk;
                 };
@@ -135,6 +171,75 @@ actor EcoBuddy {
 
           };
         };
+      };
+    };
+  };
+
+  public func askQuiz(theme : Text) : async Result.Result <Text, Text> {
+    let res = await AiService.askQuiz(theme);
+    res;
+  };
+
+  // DAILY QUEST ------------------------------------------------------------------- DAILY QUEST
+  public func checkDailyQuest(userId : Principal, date : Text) : async Result.Result<Types.DailyQuest, Text> {
+    let currentQuest = DailyQuest.checkDailyQuest(userId, dailyQuests, date);
+    switch(currentQuest){
+      case(#err(t)){
+        Debug.print(debug_show(t));
+        return currentQuest;
+      };
+      case(#ok(validData)){
+        if(validData.login){
+          // IF LOGIN, RETURN DATA
+          Debug.print(debug_show("User allready login this day")); 
+          return currentQuest;
+        }else{
+          // IF NOT LOGIN, ADD EXP 20 TO USER
+          let _exp = addExp(20, userId);
+          let newData = {
+            login = true;
+            date = validData.date;
+            chatCount = validData.chatCount;
+            quizCount = validData.quizCount;
+          };
+          return #ok newData;
+        };
+      };
+    };
+  };
+
+  // DAILY QUIZZ ------------------------------------------------------------------- DAILY QUIZZ
+  public shared func getDailyQuizs (userId : Principal, date : Text, id1 : Text, id2 : Text, id3 : Text ) : async Result.Result<Types.DailyQuiz, Text> {
+    let userQuiz = await DailyQuiz.getDailyQuizs(userId, date, dailyQuizs, id1, id2, id3);
+    switch(userQuiz){
+      case (#ok (valid)){
+        #ok valid;
+      };
+      case(#err(t)){
+        #err t
+      };
+    };
+  };
+
+  public shared func submitDailyQuiz (userId : Principal, id : Text, exp : Text) : async Result.Result<Types.DailyQuiz, Text>{
+    let userQuiz = await DailyQuiz.submitDailyQuiz(userId, id, dailyQuizs);
+    
+    switch(userQuiz){
+      case (#ok (valid)){
+        let expUser = switch(Nat.fromText(exp)){
+          case (?isNat){
+            isNat
+          };
+          case (null){
+            0
+          };
+        };
+        let addExpUser = await addExp(expUser, userId);
+        Debug.print(debug_show(addExpUser));
+        #ok valid;
+      };
+      case(#err(t)){
+        #err t
       };
     };
   };
