@@ -11,82 +11,82 @@ import GlobalConstants "../constants/GlobalConstants";
 
 module {
 
-  public func handleGetUserLevelDetail(userId : Principal, userLevel : Types.LevelDetails) : async Result.Result<Types.LevelDetail, Text> {
-    // auth
-    if (Principal.isAnonymous(userId)) {
-      return #err "Anonymous principals are not allowed";
-    };
+  // public func handleGetUserLevelDetail(userId : Principal, userLevel : Types.LevelDetails) : async Result.Result<Types.LevelDetail, Text> {
+  //   // auth
+  //   if (Principal.isAnonymous(userId)) {
+  //     return #err "Anonymous principals are not allowed";
+  //   };
 
-    // query data
-    let userLevelDetail = userLevel.get(userId);
+  //   // query data
+  //   let userLevelDetail = userLevel.get(userId);
 
-    // validate if exists
-    switch (userLevelDetail) {
-      case (null) {
-        return #err "User not found";
-      };
-      case (?currentUser) {
-        return #ok currentUser;
-      };
-    };
-  };
+  //   // validate if exists
+  //   switch (userLevelDetail) {
+  //     case (null) {
+  //       return #err "User not found";
+  //     };
+  //     case (?currentUser) {
+  //       return #ok currentUser;
+  //     };
+  //   };
+  // };
 
-  public func handleUpgradeLevel(level : Nat, userId : Principal, userLevel : Types.LevelDetails, users : Types.Users) : async Result.Result<Types.LevelDetail, Text> {
-    // auth
-    if (Principal.isAnonymous(userId)) {
-      return #err "Anonymous principals are not allowed";
-    };
+  // public func handleUpgradeLevel(level : Nat, userId : Principal, userLevel : Types.LevelDetails, users : Types.Users) : async Result.Result<Types.LevelDetail, Text> {
+  //   // auth
+  //   if (Principal.isAnonymous(userId)) {
+  //     return #err "Anonymous principals are not allowed";
+  //   };
 
-    // query data
-    let userLevelDetail = userLevel.get(userId);
-    let usersdata = users.get(userId);
+  //   // query data
+  //   let userLevelDetail = userLevel.get(userId);
+  //   let usersdata = users.get(userId);
 
-    // validate if exists
-    switch (userLevelDetail) {
-      case (null) {
-        return #err "User level details not found";
-      };
-      case (?currentUser) {
-        switch (usersdata) {
-          case (null) {
-            return #err "User not found";
-          };
-          case (?userData) {
-            let expPerLevel = await calculateExpPerLevel(level);
-            if (currentUser.currentExp >= expPerLevel) {
-              let updatedUserLevelDetail : Types.LevelDetail = {
-                userId = currentUser.userId;
-                avatar = currentUser.avatar;
-                nextLevel = currentUser.nextLevel + 1;
-                expToNextLevel = await calculateExpPerLevel(currentUser.nextLevel + 1);
-                currentExp = currentUser.currentExp - expPerLevel;
-              };
+  //   // validate if exists
+  //   switch (userLevelDetail) {
+  //     case (null) {
+  //       return #err "User level details not found";
+  //     };
+  //     case (?currentUser) {
+  //       switch (usersdata) {
+  //         case (null) {
+  //           return #err "User not found";
+  //         };
+  //         case (?userData) {
+  //           let expPerLevel = await calculateExpPerLevel(level);
+  //           if (currentUser.currentExp >= expPerLevel) {
+  //             let updatedUserLevelDetail : Types.LevelDetail = {
+  //               userId = currentUser.userId;
+  //               avatar = currentUser.avatar;
+  //               nextLevel = currentUser.nextLevel + 1;
+  //               expToNextLevel = await calculateExpPerLevel(currentUser.nextLevel + 1);
+  //               currentExp = currentUser.currentExp - expPerLevel;
+  //             };
 
-              let usersUpdatedData : Types.User = {
-                id = userData.id;
-                username = userData.username;
-                walletAddress = userData.walletAddress;
-                achievements = userData.achievements;
-                expPoints = userData.expPoints;
-                level = userData.level + 1;
-                avatar = userData.avatar;
-                profile = userData.profile;
-              };
+  //             let usersUpdatedData : Types.User = {
+  //               id = userData.id;
+  //               username = userData.username;
+  //               walletAddress = userData.walletAddress;
+  //               achievements = userData.achievements;
+  //               expPoints = userData.expPoints;
+  //               level = userData.level + 1;
+  //               avatar = userData.avatar;
+  //               profile = userData.profile;
+  //             };
 
-              // update data exp
-              userLevel.put(userId, updatedUserLevelDetail);
-              users.put(userId, usersUpdatedData);
+  //             // update data exp
+  //             userLevel.put(userId, updatedUserLevelDetail);
+  //             users.put(userId, usersUpdatedData);
 
-              // return exp amount
-              return #ok updatedUserLevelDetail;
-            } else {
-              return #err "Not enough EXP to upgrade level";
-            };
-          };
-        };
-      };
-    };
-  };
+  //             // return exp amount
+  //             return #ok updatedUserLevelDetail;
+  //           } else {
+  //             return #err "Not enough EXP to upgrade level";
+  //           };
+  //         };
+  //       };
+  //     };
+  //   };
+  // };
 
   public func handleAddAvatar(avatarList : Types.Avatars) : async Text {
     let avatarData : [(Text, Text)] = [("EPIC", GlobalConstants.AVATAR_EPIC), ("BASIC", GlobalConstants.AVATAR_BASIC), ("ELITE", GlobalConstants.AVATAR_ELITE), ("LEGEND", GlobalConstants.AVATAR_LEGEND), ("MYTHIC", GlobalConstants.AVATAR_MYTHIC)];

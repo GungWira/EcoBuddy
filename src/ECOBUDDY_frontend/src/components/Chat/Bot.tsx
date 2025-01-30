@@ -3,7 +3,8 @@ import { gsap } from "gsap";
 import { Link } from "react-router-dom";
 import Button from "../Button";
 import Shine from "../Shine";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../../hooks/AuthProvider";
 
 interface BotProps {
   level: number;
@@ -26,7 +27,11 @@ export default function Bot({
   loading,
   onClick,
 }: BotProps) {
+  const { user } = useAuth();
   const element = useRef(null);
+  const [lastExp, setLastExp] = useState(-1);
+  const [userLevel, setUserLevel] = useState(-1);
+  const [userPlot, setUserPlot] = useState(5);
 
   useEffect(() => {
     if (!loading) {
@@ -70,9 +75,28 @@ export default function Bot({
     }
   }, [hidden, loading]);
 
-  function countExp() {
-    level == 1 ? prog / 3 : (prog / (100 * level * level - 90)) * 100;
-  }
+  useEffect(() => {
+    if (level || userLevel) {
+      if (userLevel < 5) {
+        setUserPlot(5);
+      } else {
+        setUserPlot((Math.floor(userLevel / 5) + 1) * 5);
+      }
+    }
+  }, [level, userLevel]);
+
+  useEffect(() => {
+    if (prog && level) {
+      if (userLevel == -1) {
+        setUserLevel(level);
+      }
+
+      if (prog < lastExp) {
+        setUserLevel(userLevel + 1);
+      }
+      setLastExp(prog);
+    }
+  }, [prog]);
 
   return (
     <div
@@ -92,20 +116,22 @@ export default function Bot({
             <div className="flex justify-between items-center gap-4 sm:gap-8 w-full">
               <div className="flex justify-start items-center gap-2 sm:gap-3">
                 <img
-                  src={`/chat/badge-lv-${level}.png`}
+                  src={`/chat/badge-lv-${userLevel}.png`}
                   alt="Badge"
                   className="max-w-none max-h-none h-6 sm:h-7 m-0"
                 />
-                {level + 1 <= 5 && (
+                {userLevel + 1 <= 30 && (
                   <img
                     src={`/chat/speed.svg`}
                     alt="Badge"
                     className="max-w-none max-h-none h-2 sm:h-3 m-0"
                   />
                 )}
-                {level + 1 <= 5 ? (
+                {userLevel + 1 <= 30 ? (
                   <img
-                    src={`/chat/badge-lv-${level + 1}.png`}
+                    src={`/chat/badge-lv-${
+                      Math.ceil(userLevel / userPlot) + 1
+                    }.png`}
                     alt="Badge"
                     className="max-w-none max-h-none h-6 sm:h-7 m-0"
                   />
@@ -118,7 +144,7 @@ export default function Bot({
                   Level
                 </p>
                 <p className="font-poppins text-sm sm:text-base text-white">
-                  {level}/5
+                  {userLevel}/{userPlot}
                 </p>
               </div>
             </div>
@@ -127,9 +153,9 @@ export default function Bot({
                 className={`prog bg-greenMain rounded-full h-1`}
                 style={{
                   width:
-                    level == 1
-                      ? prog / 3 + "%"
-                      : (prog / 100) * level * level - 90 + "%",
+                    (prog / (100 * (userLevel + 1) * (userLevel + 1) - 100)) *
+                      100 +
+                    "%",
                 }}
               ></div>
             </div>
@@ -156,12 +182,12 @@ export default function Bot({
               className="w-64 md:w-80 max-w-none max-h-none z-10 relative"
             />
             <img
-              src={`/chat/bot-lv-${level}.svg`}
+              src={user && user.avatar ? user.avatar : `/chat/bot-lv-${-1}.svg`}
               alt="Bot"
               className="w-48 md:w-52 max-w-none max-h-none z-20 absolute"
             />
             <div className="flex justify-center items-center px-4 py-1 border border-greenMain rounded-lg bg-darkMain font-poppins text-white text-sm md:text-base font-semibold absolute z-20 -bottom-3">
-              Lv {level}
+              Lv {userLevel}
             </div>
           </div>
           <div

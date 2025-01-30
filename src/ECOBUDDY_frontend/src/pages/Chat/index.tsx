@@ -40,7 +40,7 @@ export default function Chat() {
     description:
       "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
     isIntro: true,
-    prog: 10,
+    prog: 0,
   });
 
   const [username, setUsername] = useState<string | undefined>(user?.username);
@@ -107,7 +107,10 @@ export default function Chat() {
             username: username,
             level: level,
             walletAddres: walletAddres,
-            expPoints: user.expPoints + botAns.ok.exp,
+            expPoints: botAns.ok.exp,
+            achievements: user.achievements,
+            avatar: user.avatar,
+            profile: user.profile,
           });
           if (dailyQuest) {
             updateDailyQuest({
@@ -197,7 +200,7 @@ export default function Chat() {
               <div className="flex flex-col justify-center items-center max-w-3xl gap-8 w-full relative bottom-8 px-4 sm:px-8">
                 <div className="flex flex-col justify-center items-center gap-2">
                   <img
-                    src={`/chat/bot-lv-1.svg`}
+                    src={user ? user.avatar : `/chat/bot-lv-1.svg`}
                     alt="Bot"
                     className="w-24 max-w-none max-h-none"
                   />

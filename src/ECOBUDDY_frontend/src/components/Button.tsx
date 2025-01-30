@@ -24,7 +24,7 @@ export default function Button({
     >
       <button
         typeof="button"
-        className={`px-6 py-2 w-fit relative z-10 rounded-full w-full font-poppins font-semibold text-xs sm:text-sm md:text-base flex justify-center items-center gap-2 ease-in-out transition-all duration-100 ${className} ${
+        className={`px-6 py-2 relative z-10 rounded-full w-full font-poppins font-semibold text-xs sm:text-sm md:text-base flex justify-center items-center gap-2 ease-in-out transition-all duration-100 ${className} ${
           type == "primary"
             ? "text-darkMain bg-greenMain"
             : "text-white bg-[#202020]"
