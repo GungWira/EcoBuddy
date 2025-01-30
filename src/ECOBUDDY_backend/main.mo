@@ -89,22 +89,10 @@ actor EcoBuddy {
         let userDailyQuest = await DailyQuest.addChatCount(userId, dailyQuests);
         let expQuest = switch(userDailyQuest){
           case(#ok(userDailyQuestValid)){
-            if(userDailyQuestValid.chatCount == 10){
-              20
-            }else{
-              0
-            }
+            if(userDailyQuestValid.chatCount == 10){ 20 }else{ 0 }
           };
           case (_){
             0
-          };
-        };
-        switch(userDailyQuest){
-          case(#err(t)){
-            Debug.print(debug_show (res));
-          };
-          case(#ok(userDailyQuestOK)){
-            Debug.print(debug_show (userDailyQuestOK));
           };
         };
         // ADD USER EXP
