@@ -15,7 +15,15 @@ import AiService "services/AiService";
 import DailyQuest "services/DailyQuest";
 import DailyQuiz "services/DailyQuiz";
 import ExpService "services/ExpService";
+
+import Time "mo:base/Time";
+import Array "mo:base/Array";
+import Bool "mo:base/Bool";
+import Debug "mo:base/Debug";
+import Nat64 "mo:base/Nat64";
+
 import LevelandAchievementService "services/LevelandAchievementService";
+import IcpLedger "canister:icp_ledger_canister";
 
 import Types "types/Types";
 
@@ -48,6 +56,12 @@ actor EcoBuddy {
     10,
     Text.equal,
     Text.hash,
+  );
+
+  let userBalances = HashMap.HashMap<Principal, Types.UserBalance>(
+    10,
+    Principal.equal,
+    Principal.hash,
   );
 
   // fun talker achievement
@@ -358,8 +372,125 @@ actor EcoBuddy {
   };
 
   // TRANSACTION & WALLET ------------------------------------------------------------------- TRANSACTION & WALLET
-  // public func getUserBalance(userId: Principal): async Nat {
+  // funcction to manage balance type
+  private func manageUserBalance(
+    userBalances : Types.UserBalances,
+    userId : Principal,
+    amount : Nat,
+    operation : { #increment; #decrement },
+  ) : Result.Result<(), Text> {
+    // function to create new balance record
+    func createNewBalance(amt : Nat) : Types.UserBalance {
+      {
+        id = userId;
+        balance = amt;
+        total_transaction = 0;
+      }
+    };
 
-  // };
+    // function to update existing balance
+    func updateBalance(current : Types.UserBalance, amt : Nat, isDecrease : Bool) : Types.UserBalance {
+      {
+        id = current.id;
+        balance = if (isDecrease) Nat.sub(current.balance, amt) else current.balance + amt;
+        total_transaction = if (isDecrease) current.total_transaction + amt else current.total_transaction;
+      }
+    };
+
+    let currentBalance = userBalances.get(userId);
+
+    switch (currentBalance, operation) {
+      case (null, #decrement) #err("No balance found for user");
+      case (?balance, #decrement) {
+        if (balance.balance < amount) {
+          #err("Balance insufficient for transaction")
+        } else {
+          userBalances.put(userId, updateBalance(balance, amount, true));
+          #ok()
+        }
+      };
+      case (null, #increment) {
+        userBalances.put(userId, createNewBalance(amount));
+        #ok()
+      };
+      case (?balance, #increment) {
+        userBalances.put(userId, updateBalance(balance, amount, false));
+        #ok()
+      };
+    }
+  };
+
+  public func getAccountBalance(userId : Principal) : async Types.UserBalance {
+    let balance = userBalances.get(userId);
+    switch (balance) {
+      case (null) {
+        return {
+          id = userId;
+          balance = 0;
+          total_transaction = 0;
+        };
+      };
+      case (?value) {
+        return value;
+      };
+    };
+  };
+
+  // func to tranfer icp
+  public func transferICP(
+    from : Principal,
+    to : Principal,
+    amount : Nat64,
+  ) : async Result.Result<IcpLedger.BlockIndex, Text> {
+    // Check minimum transfer amount
+    if (amount < 2_000) {
+      return #err("Transfer amount too small. Minimum is 2_000 e8s");
+    };
+
+    // Get account balances
+    let fromBalance = await getAccountBalance(from);
+    if (fromBalance.balance < Nat64.toNat(amount)) {
+      return #err("Insufficient balance");
+    };
+
+    // Update internal balances
+    let fromBalanceResult = manageUserBalance(userBalances, from, Nat64.toNat(amount), #decrement);
+    let toBalanceResult = manageUserBalance(userBalances, to, Nat64.toNat(amount), #increment);
+
+    switch (fromBalanceResult, toBalanceResult) {
+      case (#err(e), _) { return #err(e) };
+      case (_, #err(e)) { return #err(e) };
+      case (#ok(_), #ok(_)) {
+        let accountIdentifier = await IcpLedger.account_identifier({
+          owner = to;
+          subaccount = null;
+        });
+
+        let transferArgs : IcpLedger.TransferArgs = {
+          to = accountIdentifier;
+          memo = 0;
+          amount = { e8s = amount };
+          fee = { e8s = 10_000 };
+          from_subaccount = null;
+          created_at_time = null;
+        };
+
+        Debug.print("Initiating transfer to: " # debug_show(to));
+        Debug.print("Amount: " # debug_show(amount));
+
+        let transferResult = await IcpLedger.transfer(transferArgs);
+        switch (transferResult) {
+          case (#Err(transferError)) {
+            Debug.print("Transfer failed: " # debug_show(transferError));
+            return #err("Transfer failed: " # debug_show(transferError));
+          };
+          case (#Ok(blockIndex)) {
+            Debug.print("Transfer successful. Block index: " # debug_show(blockIndex));
+            return #ok(blockIndex);
+          };
+        };
+      };
+    };
+  };
 };
 
