@@ -5,10 +5,10 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
-import JSON "mo:json";
 import Time "mo:base/Time";
 import Array "mo:base/Array";
 import Bool "mo:base/Bool";
+import Debug "mo:base/Debug";
 
 import UserService "services/UserService";
 import AiService "services/AiService";
@@ -33,12 +33,6 @@ actor EcoBuddy {
     Principal.hash,
   );
   private var dailyQuizs : Types.DailyQuizs = HashMap.HashMap<Principal, Types.DailyQuiz>(
-    10,
-    Principal.equal,
-    Principal.hash,
-  );
-
-  private var userLevel : Types.LevelDetails = HashMap.HashMap<Principal, Types.LevelDetail>(
     10,
     Principal.equal,
     Principal.hash,
@@ -117,19 +111,22 @@ actor EcoBuddy {
   var passAnswer : Text = "";
 
   public func askBot(input : Text, userId : Principal) : async Result.Result<Types.ResponseAI, Text> {
-    let res = await AiService.httpReq(input, passAnswer);
+    let res = await AiService.askBot(input, passAnswer);
     let generatedUUID = AiService.generateUUID();
     let userData = users.get(userId);
 
     switch (userData) {
       case (null) { #err("User not found") };
       case (?currentUser) {
+        Debug.print(debug_show(currentUser));
         switch (res) {
           case(#err(s)) { 
             passAnswer := "";
             #err s 
           };
           case (#ok(result)) {
+            // CHECK ACHIEVEMENT
+            let _ = await checkAchievement(userId, currentUser, result.solution, input);
             // ADD QUEST
             let userDailyQuest = await DailyQuest.addChatCount(userId, dailyQuests);
             let expQuest = switch(userDailyQuest){
@@ -163,7 +160,6 @@ actor EcoBuddy {
                   },
                 );
 
-                let _ = await checkAchievement(userId, currentUser, result.solution, input);
 
                 #ok final;
               };
@@ -189,7 +185,7 @@ actor EcoBuddy {
         return currentQuest;
       };
       case(#ok(validData)){
-        if(validData.login){
+        if(validData.login == true){
           // IF LOGIN, RETURN DATA
           Debug.print(debug_show("User allready login this day")); 
           return currentQuest;
@@ -202,6 +198,7 @@ actor EcoBuddy {
             chatCount = validData.chatCount;
             quizCount = validData.quizCount;
           };
+          dailyQuests.put(userId, newData);
           return #ok newData;
         };
       };
@@ -254,23 +251,6 @@ actor EcoBuddy {
   };
 
   // LEVEL & ACHIEVEMENT-------------------------------------------------------------------- LEVEL & ACHIEVEMENT
-  public func getUserLevelDetail(userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
-    return await LevelandAchievementService.handleGetUserLevelDetail(userId, userLevel);
-  };
-
-  public func upgradeLevel(level : Nat, userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
-    return await LevelandAchievementService.handleUpgradeLevel(level, userId, userLevel, users);
-  };
-
-  // RUN THIS FUNCTION WHEN CANISTER IS DEPLOYED
-  public func addAvatar() : async Text {
-    return await LevelandAchievementService.handleAddAvatar(avatarList);
-  };
-
-  public func unlockAvatar(level : Nat, userId : Principal) : async Result.Result<Text, Text> {
-    return await LevelandAchievementService.handleUnlockAvatar(level, userId, users, avatarList);
-  };
-
   private func getAchievement(userId : Principal) : async Bool {
     // auth
     if (Principal.isAnonymous(userId)) {
