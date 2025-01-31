@@ -29,8 +29,8 @@ module {
   public type UserBalance = {
     id : Principal;
     balance : Nat;
+    total_transaction: Nat;
   };
-  
 
   public type UserUpdateProfile = {
     username : ?Text;
