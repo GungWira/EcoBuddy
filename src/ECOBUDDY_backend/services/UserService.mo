@@ -35,7 +35,7 @@ module {
                     username = "User";
                     level = 1;
                     walletAddress = walletAddress;
-                    expPoints = 0;
+                    expPoints = 20; // START 20 EXP, AUTO LOGIN USER
                     achievements = [];
                     avatar = GlobalConstants.AVATAR_BASIC;
                     profile = GlobalConstants.PROFILE_DEFAULT;
@@ -65,8 +65,8 @@ module {
                 let updatedUser : Types.User = {
                     id = currentUser.id;
                     username = switch (data.username) {
-                        case (null) { currentUser.username };
-                        case (?username) { username };
+                        case ("") { currentUser.username };
+                        case (_) { data.username };
                     };
                     level = currentUser.level;
                     walletAddress = currentUser.walletAddress;
@@ -74,8 +74,8 @@ module {
                     achievements = currentUser.achievements;
                     avatar = currentUser.avatar;
                     profile = switch (data.profile) {
-                        case (null) { currentUser.profile };
-                        case (?profile) { profile };
+                        case ("") { currentUser.profile };
+                        case (_) { data.profile };
                     };
                 };
                 users.put(userId, updatedUser);

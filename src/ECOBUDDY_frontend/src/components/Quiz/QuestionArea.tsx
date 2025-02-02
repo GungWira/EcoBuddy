@@ -51,7 +51,7 @@ export default function QuestionArea() {
 
   return (
     <div
-      className={`w-screen h-screen relative flex flex-col justify-center items-center transition-all ease-in-out duration-500 gap-4 ${
+      className={`w-screen h-screen relative flex flex-col justify-center items-center transition-all ease-in-out duration-500 gap-4 px-8 ${
         isStart ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -87,7 +87,7 @@ export default function QuestionArea() {
               <button
                 key={key}
                 onClick={() => handlerAnswer(opt)}
-                className={`w-full flex justify-start items-center text-white font-poppins text-base font-medium relative px-4 py-5 rounded-md duration-300 ease-in-out ${bgColor}`}
+                className={`w-full flex justify-start items-center text-white font-poppins text-sm sm:text-sm md:text-base font-medium relative px-4 py-5 rounded-md duration-300 ease-in-out ${bgColor}`}
                 disabled={!!selectedAnswer}
               >
                 <span>

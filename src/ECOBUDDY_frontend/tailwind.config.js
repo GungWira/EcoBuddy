@@ -20,6 +20,7 @@ export default {
       backgroundImage: {
         mainBackground: "url('/home/background.svg')",
         aboutBackground: "url('/home/background-about.svg')",
+        gardenBackground: "url('/garden/background.png')",
         shine: "linear-gradient(to right, #202020 0%, #13F287 100% 0%)",
         greenGradient: "linear-gradient(to right, #13F287 0%, #0B8C4E 100%)",
         darkGradient: "linear-gradient(to right, #202020 0%, #1A1A1A 100%)",

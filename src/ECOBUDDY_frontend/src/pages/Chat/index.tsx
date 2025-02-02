@@ -102,15 +102,18 @@ export default function Chat() {
           setResponse((prev) => [...prev, botAns.err]);
         } else {
           setResponse((prev) => [...prev, botAns.ok.solution]);
+          const userData = await callFunction.getUserById(principal);
+          console.log(userData);
+
           updateUser({
             id: principal,
-            username: username,
-            level: level,
+            username: userData[0].username,
+            level: userData[0].level,
             walletAddres: walletAddres,
-            expPoints: botAns.ok.exp,
-            achievements: user.achievements,
-            avatar: user.avatar,
-            profile: user.profile,
+            expPoints: userData[0].expPoints,
+            achievements: userData[0].achievements,
+            avatar: userData[0].avatar,
+            profile: userData[0].profile,
           });
           if (dailyQuest) {
             updateDailyQuest({
@@ -125,6 +128,11 @@ export default function Chat() {
         console.error("Fetch error:", error);
       }
     }
+  };
+
+  const handlerSuggest = (input: string) => {
+    setUserInput(input);
+    handlerChat();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -170,9 +178,10 @@ export default function Chat() {
 
           {/* EDIT PROFILE */}
           <EditProfile
-            urlProfile="/chat/default-profile.png"
+            urlProfile={user ? user.profile : "/chat/default-profile.png"}
             username={username}
             setUsername={setUsername}
+            achievements={user ? user.achievements : [""]}
             principal={principal}
             hidden={!isEditProfile}
             onClick={() => setIsEditProfile(false)}
@@ -254,16 +263,16 @@ export default function Chat() {
                   <div className="flex flex-row justify-between items-stretch gap-4 sm:gap-5 md:gap-6 w-full max-w-full overflow-x-scroll overflow-y-hidden sm:overflow-y-hidden sm:overflow-x-hidden scrollbar-none">
                     <SugestChat
                       imageUrl="/chat/recycle.svg"
-                      onClick={() => setCommand(["How do I sort my waste?"])}
+                      onClick={() => handlerSuggest("How do I sort my waste?")}
                     >
                       How do I sort my waste?
                     </SugestChat>
                     <SugestChat
                       imageUrl="/chat/lamp.svg"
                       onClick={() =>
-                        setCommand([
-                          "Give me eco-friendly tips for my daily routine.",
-                        ])
+                        handlerSuggest(
+                          "Give me eco-friendly tips for my daily routine."
+                        )
                       }
                     >
                       Give me eco-friendly tips for my daily routine.
@@ -271,9 +280,9 @@ export default function Chat() {
                     <SugestChat
                       imageUrl="/chat/foot.svg"
                       onClick={() =>
-                        setCommand([
-                          "What eco-friendly actions can I do today?",
-                        ])
+                        handlerSuggest(
+                          "What eco-friendly actions can I do today?"
+                        )
                       }
                     >
                       What eco-friendly actions can I do today?
@@ -307,7 +316,7 @@ export default function Chat() {
                       className="w-fit max-w-36 rounded-full px-2 gap-2 py-1 border border-whiteSoft flex flex-row justify-start items-center relative group z-10"
                     >
                       <img
-                        src="/chat/default-profile.png"
+                        src={user ? user.profile : "/chat/default-profile.png"}
                         alt="User Profile"
                         className="max-w-none max-h-none m-0 rounded-full w-6"
                       />

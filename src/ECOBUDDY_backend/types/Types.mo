@@ -12,6 +12,8 @@ module {
   public type LevelDetails = HashMap.HashMap<Principal, LevelDetail>;
   public type DailyQuests = HashMap.HashMap<Principal, DailyQuest>;
   public type DailyQuizs = HashMap.HashMap<Principal, DailyQuiz>;
+  // ACHIEVEMENT PROGRES
+  public type AchievementProgs = HashMap.HashMap<Principal, AchievementProg>;
 
   // USER TYPE
   public type User = {
@@ -32,8 +34,8 @@ module {
   };
 
   public type UserUpdateProfile = {
-    username : ?Text;
-    profile : ?Text;
+    username : Text;
+    profile : Text;
   };
 
   // DAILY QUEST
@@ -55,6 +57,13 @@ module {
     statQuizNum3 : Bool;
   };
   
+  // ACHIEVEMENT PROGRESS
+  public type AchievementProg = {
+    emojiCount : Nat;
+    messageCount : Nat;
+    questionCount : Nat;
+  };
+
   // AI TYPE
   public type ResponseAI = {
     solution : Text;

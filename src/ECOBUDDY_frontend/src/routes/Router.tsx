@@ -9,6 +9,7 @@ import { useAuth } from "../hooks/AuthProvider";
 import Quiz from "../pages/Quiz";
 import Start from "../pages/Quiz/Start";
 import Result from "../pages/Quiz/Result";
+import Garden from "../pages/Garden";
 
 function Router() {
   const { isAuth } = useAuth();
@@ -23,6 +24,8 @@ function Router() {
         index
         element={isAuth ? <Navigate to="/chat" replace /> : <Home />}
       />
+      <Route path="/garden" element={<Garden />} />
+
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
         <Route path="/chat" element={<Chat />} />

@@ -26,7 +26,7 @@ export default function QuizResult({ isCalculate }: QuizResultProps) {
           : "opacity-0 z-0 -translate-y-4"
       } w-screen h-screen flex justify-center items-center absolute top-0 left-0 z-0 duration-500 ease-in-out transition-all`}
     >
-      <div className="flex flex-col justify-center items-center gap-6 bg-[#303030] rounded-xl px-6 py-8 w-full max-w-lg">
+      <div className="flex flex-col justify-center items-center gap-6 bg-transparent sm:bg-[#303030] rounded-xl px-6 py-8 w-full max-w-lg h-screen sm:h-fit">
         {/* TITLE */}
         <h1 className="font-poppins text-white text-center font-bold text-xl sm:text-xl md:text-2xl lg:text-3xl mb-4">
           Your Quiz Summary

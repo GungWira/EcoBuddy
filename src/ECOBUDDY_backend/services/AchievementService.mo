@@ -5,6 +5,23 @@ import Array "mo:base/Array";
 import Types "../types/Types";
 
 module {
+  public func getUserProgress (userId : Principal, achievementProgs : Types.AchievementProgs) : async Types.AchievementProg{
+    switch(achievementProgs.get(userId)){
+      case(?isProg){
+        isProg;
+      };
+      case(null){
+        let newData = {
+          emojiCount = 0;
+          messageCount = 0;
+          questionCount = 0;
+        };
+        achievementProgs.put(userId, newData);
+        newData;
+      }
+    };
+  };
+
   public func handleUnlockAchievement(AchievementType : Text, userId : Principal, users : Types.Users) : async Result.Result<Text, Text> {
     // auth
     if (Principal.isAnonymous(userId)) {
