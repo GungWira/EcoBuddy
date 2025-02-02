@@ -5,28 +5,42 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
-import Time "mo:base/Time";
-import Array "mo:base/Array";
-import Bool "mo:base/Bool";
-import Debug "mo:base/Debug";
 
 import UserService "services/UserService";
 import AiService "services/AiService";
 import DailyQuest "services/DailyQuest";
 import DailyQuiz "services/DailyQuiz";
 import ExpService "services/ExpService";
-import AchievementService "services/AchievementService";
+
+import Time "mo:base/Time";
+import Array "mo:base/Array";
+import Bool "mo:base/Bool";
+import Debug "mo:base/Debug";
+import Nat64 "mo:base/Nat64";
+
+import IcpLedger "canister:icp_ledger_canister";
 
 import Types "types/Types";
+import UserService "services/UserService";
+import AiService "services/AiService";
+import ExpService "services/ExpService";
+import AchievementService "services/AchievementService";
+import TransactionService "services/TransactionService";
 
 
-actor EcoBuddy {
+actor class EcoBuddy() = this {
+  stable var ecobuddyPrincipal : Principal = Principal.fromActor(this);
+
+  Debug.print(debug_show (ecobuddyPrincipal));
+
   // DATA
-  private var users : Types.Users = HashMap.HashMap<Principal, Types.User>(
+   private var users : Types.Users = HashMap.HashMap<Principal, Types.User>(
     10,
     Principal.equal,
     Principal.hash,
   );
+
+  private var userLevel : Types.LevelDetails = HashMap.HashMap<Principal, Types.LevelDetail>(
   private var dailyQuests : Types.DailyQuests = HashMap.HashMap<Principal, Types.DailyQuest>(
     10,
     Principal.equal,
@@ -49,14 +63,20 @@ actor EcoBuddy {
     Text.hash,
   );
 
+  private var userBalances: Types.UserBalances = HashMap.HashMap<Principal, Types.UserBalance>(
+    10,
+    Principal.equal,
+    Principal.hash,
+  );
+
   // fun talker achievement
-  private var EmojiCount = 0;
+  stable var EmojiCount = 0;
 
   // knowledge seeker achievement
-  private var messageCount : Nat = 0;
+  stable var messageCount : Nat = 0;
 
   // curious starter achievement
-  private var questionCount : Nat = 0;
+  stable var questionCount : Nat = 0;
 
   public type AchievementList = {
     #Conversation_Starter;
@@ -65,10 +85,14 @@ actor EcoBuddy {
     #Knowledge_Spreader;
   };
 
-  private var AchievementCollected : [Text] = [];
+  stable var AchievementCollected : [Text] = [];
 
   // DATA ENTRIES
   private stable var usersEntries : [(Principal, Types.User)] = [];
+  private stable var userLevelEntries : [(Principal, Types.LevelDetail)] = [];
+  private stable var messageRecordsEntries : [(Text, Types.Message)] = [];
+  private stable var avatarListEntries : [(Text, Types.Avatar)] = [];
+  private stable var userBalancesEntries : [(Principal, Types.UserBalance)] = [];
   private stable var dailyQuestsEntries : [(Principal, Types.DailyQuest)] = [];
   private stable var dailyQuizsEntries : [(Principal, Types.DailyQuiz)] = [];
   private stable var achievementProgsEntries : [(Principal, Types.AchievementProg)] = [];
@@ -76,14 +100,28 @@ actor EcoBuddy {
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
     usersEntries := Iter.toArray(users.entries());
+    userLevelEntries := Iter.toArray(userLevel.entries());
+    messageRecordsEntries := Iter.toArray(messageRecords.entries());
+    avatarListEntries := Iter.toArray(avatarList.entries());
+    userBalancesEntries := Iter.toArray(userBalances.entries());
     dailyQuestsEntries := Iter.toArray(dailyQuests.entries());
     dailyQuizsEntries := Iter.toArray(dailyQuizs.entries());
     achievementProgsEntries := Iter.toArray(achievementProgs.entries());
     
   };
+
   system func postupgrade() {
     users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
+    userLevel := HashMap.fromIter<Principal, Types.LevelDetail>(userLevelEntries.vals(), 0, Principal.equal, Principal.hash);
+    messageRecords := HashMap.fromIter<Text, Types.Message>(messageRecordsEntries.vals(), 0, Text.equal, Text.hash);
+    avatarList := HashMap.fromIter<Text, Types.Avatar>(avatarListEntries.vals(), 0, Text.equal, Text.hash);
+    userBalances := HashMap.fromIter<Principal, Types.UserBalance>(userBalancesEntries.vals(), 0, Principal.equal, Principal.hash);
+
     usersEntries := [];
+    userLevelEntries := [];
+    messageRecordsEntries := [];
+    avatarListEntries := [];
+    userBalancesEntries := [];
     dailyQuests := HashMap.fromIter<Principal, Types.DailyQuest>(dailyQuestsEntries.vals(), 0, Principal.equal, Principal.hash);
     dailyQuestsEntries := [];
     dailyQuizs := HashMap.fromIter<Principal, Types.DailyQuiz>(dailyQuizsEntries.vals(), 0, Principal.equal, Principal.hash);
@@ -367,8 +405,23 @@ actor EcoBuddy {
   };
 
   // TRANSACTION & WALLET ------------------------------------------------------------------- TRANSACTION & WALLET
-  // public func getUserBalance(userId: Principal): async Nat {
+  // get canister principal
+  public query func getEcobuddyPrincipal() : async Principal {
+    return ecobuddyPrincipal;
+  };
 
-  // };
+  // get account balance
+  public func getAccountBalance(userId : Principal) : async Types.UserBalance {
+    return await TransactionService.handleGetAccountBalance(userId, userBalances);
+  };
+
+  // func to tranfer icp
+  public func transferICP(
+    from : Principal,
+    to : Principal,
+    amount : Nat64,
+  ) : async Result.Result<IcpLedger.BlockIndex, Text> {
+    return await TransactionService.handleTransferICP(from, to, amount, userBalances);
+  };
 };
 

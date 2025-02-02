@@ -112,6 +112,7 @@ module {
     };
   };
 
+
   public func calculateExpPerLevel(level : Nat) : Nat {
     return 100 * (level * level) - 100;
   };
