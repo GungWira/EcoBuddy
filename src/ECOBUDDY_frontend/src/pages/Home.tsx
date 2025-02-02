@@ -5,8 +5,10 @@ import AboutCard from "../components/AboutCard";
 import PricingCard from "../components/PricingCard";
 import QNA from "../components/QNA";
 import Footer from "../components/Footer";
+import { useAuth } from "../hooks/AuthProvider";
 
 export default function () {
+  const { login } = useAuth();
   return (
     <main className="bg-darkMain w-full">
       <Navbar />
@@ -30,7 +32,7 @@ export default function () {
             everyday choices for a better planet.
           </p>
           <div className="flex flex-row justify-start items-start gap-2">
-            <Button link="/login">
+            <Button link="" onClick={login}>
               <p>Try it free</p>
               <img
                 src="/home/more.svg"
@@ -141,7 +143,7 @@ export default function () {
               progress. With personalized advice and easy-to-follow steps,
               EcoBuddy makes living sustainably simple and fun.
             </p>
-            <Button link="/login">
+            <Button link="" onClick={login}>
               <p>Try it now</p>
               <img
                 src="/home/more.svg"

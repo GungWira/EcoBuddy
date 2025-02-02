@@ -200,7 +200,8 @@ export default function Navbar() {
           </div>
           <div className="pt-4 border-t border-[#707070] w-full">
             <Link
-              to="/chat"
+              to=""
+              onClick={login}
               className="bg-greenMain w-full flex justify-center items-center rounded-lg font-poppins font-semibold text-darkMain py-2 text-lg"
             >
               Get Started

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useAuth } from "../../hooks/AuthProvider";
 
 interface DonateBoxProps {
   isActive: boolean;
@@ -11,12 +12,34 @@ export default function DonateBox({
   onSuccess,
   onClick,
 }: DonateBoxProps) {
+  const { principal, ecoBuddyPrincipal, callFunction } = useAuth();
   const [value, setValue] = useState<number | string>(0);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handlerDonate = () => {
-    if (value != "") {
-      setValue(0);
-      onSuccess(Number(value));
+  const handlerDonate = async () => {
+    setLoading(true);
+    setErrorMessage(null);
+    try {
+      if (value != "") {
+        const amount = Number(value) * 1000000;
+        const res = await callFunction.transferICP(
+          principal,
+          ecoBuddyPrincipal,
+          amount
+        );
+        console.log(res);
+        if ("ok" in res) {
+          setValue(0);
+          onSuccess(Number(value));
+        } else {
+          setErrorMessage("Failed to donate your ICP, please try again later");
+        }
+      }
+    } catch (error) {
+      setErrorMessage("Failed to donate your ICP, please try again later");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,13 +156,21 @@ export default function DonateBox({
             </p>
           </div>
           {/* ACTION */}
-          <button
-            typeof="button"
-            onClick={handlerDonate}
-            className="w-full bg-greenMain rounded-full font-poppins text-darkMain text-base font-semibold px-8 py-2"
-          >
-            Donate Now
-          </button>
+          <div className="flex flex-col w-full justify-center items-start">
+            <button
+              typeof="button"
+              onClick={handlerDonate}
+              disabled={loading}
+              className={`w-full bg-greenMain rounded-full font-poppins text-darkMain text-base font-semibold px-8 py-2 ${
+                loading ? "bg-[#21c073]" : "bg-greenMain"
+              }`}
+            >
+              {loading ? "Processing" : "Donate Now"}
+            </button>
+            <p className="font-poppins text-red-400 text-sm mt-1">
+              {errorMessage}
+            </p>
+          </div>
         </div>
       </div>
     </div>
