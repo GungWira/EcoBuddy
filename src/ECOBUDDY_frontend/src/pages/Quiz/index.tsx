@@ -26,7 +26,7 @@ export default function Quiz() {
       <div className="bg-darkMain w-full relative">
         <div className="min-w-screen min-h-screen bg-mainBackground bg-4 px-4 md:px-8 flex flex-col justify-start items-center">
           {/* STARTER */}
-          <div className="flex flex-col justify-center items-center w-screen h-screen relative overflow-visible">
+          <div className="flex flex-col justify-center items-center w-screen h-screen relative overflow-visible px-8">
             {/* CONTENT */}
             <div className="relative flex flex-row h-fit justify-start items-center w-full overflow-hidden pb-24 overflow-y-visible">
               {/* INTRO */}
@@ -37,7 +37,7 @@ export default function Quiz() {
                     : "-translate-y-4 z-0 opacity-0"
                 }`}
               >
-                <div className="w-96 relative overflow-hidden">
+                <div className="w-52 sm:w-64 md:w-80 lg:w-96 relative overflow-hidden">
                   <img
                     src="/quiz/starter.png"
                     alt="Starter Image"
@@ -63,17 +63,17 @@ export default function Quiz() {
                     : "translate-y-0 z-10"
                 }`}
               >
-                <div className="w-full max-w-[512px] flex flex-col justify-center items-center gap-3">
-                  <h1 className="font-poppins text-white text-center font-bold text-2xl sm:text-2xl md:text-3xl lg:text-4xl">
+                <div className="w-full max-w-[512px] flex flex-col justify-start sm:justify-center items-start sm:items-center gap-3">
+                  <h1 className="font-poppins text-white text-left sm:text-center font-bold text-2xl sm:text-2xl md:text-3xl lg:text-4xl">
                     Choose Your{" "}
                     <span className="text-greenMain">Quiz Theme!</span>
                   </h1>
-                  <p className="text-whiteSoft font-poppins text-sm sm:text-sm md:text-base text-center mb-2">
+                  <p className="text-whiteSoft font-poppins text-sm sm:text-sm md:text-base sm:text-center mb-2">
                     Pick a theme and start your eco-quiz journey! Test your
                     knowledge while learning to protect our planet.
                   </p>
                 </div>
-                <div className="flex flex-row w-full justify-center items-center gap-4 mt-6">
+                <div className="flex flex-row w-full justify-start sm:justify-center items-start sm:items-center gap-4 mt-6 overflow-x-scroll no-scrollbar">
                   {dailyQuiz.map((quiz) => (
                     <CardTheme
                       id={quiz.id}
@@ -92,15 +92,15 @@ export default function Quiz() {
                 </div>
               </div>
               {/* BUTTON */}
-              <div className="flex flex-col justify-start items-center w-full gap-4 mt-8 absolute bottom-0">
+              <div className="flex flex-col justify-start items-center w-full gap-4 mt-0 md:mt-8 absolute bottom-0">
                 <div className="flex flex-row justify-center items-center gap-1">
                   <div
-                    className={`h-3  rounded-full transition-all ease-in-out duration-300 ${
+                    className={`h-2 md:h-3  rounded-full transition-all ease-in-out duration-300 ${
                       isIntro ? "bg-greenMain w-7" : "bg-[#303030] w-3"
                     }`}
                   ></div>
                   <div
-                    className={`h-3  rounded-full transition-all ease-in-out duration-300 ${
+                    className={`h-2 md:h-3  rounded-full transition-all ease-in-out duration-300 ${
                       !isIntro ? "bg-greenMain w-7" : "bg-[#303030] w-3"
                     }`}
                   ></div>

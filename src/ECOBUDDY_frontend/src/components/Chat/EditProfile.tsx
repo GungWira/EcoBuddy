@@ -11,6 +11,7 @@ interface EditProfileProps {
   principal: Principal | null;
   hidden: boolean;
   onClick: () => void;
+  achievements: [string];
 }
 
 export default function EditProfile({
@@ -20,11 +21,15 @@ export default function EditProfile({
   principal,
   hidden,
   onClick,
+  achievements,
 }: EditProfileProps) {
-  const { callFunction, updateUser } = useAuth();
+  const { callFunction, updateUser, user } = useAuth();
   const element = useRef(null);
   const [start, setStart] = useState(false);
   const [name, setName] = useState<string | undefined>();
+
+  const [base64, setBase64] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (username) {
@@ -76,12 +81,34 @@ export default function EditProfile({
     setTimeout(() => setStart(true), 500);
   }, []);
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        setPreview(result);
+      };
+      reader.onerror = (error) => {
+        console.error("Error converting file to base64:", error);
+      };
+    }
+  };
+
   const handlerUpdateProfile = async () => {
     if (!callFunction || !principal) {
       return;
     }
     try {
-      const updatedUser = await callFunction.updateUser(name);
+      let newProfile = user.profile;
+      if (preview) {
+        newProfile = preview;
+      }
+      const updatedUser = await callFunction.updateUser({
+        username: name,
+        profile: newProfile,
+      });
       updateUser(updatedUser.ok);
       setUsername(name);
       onClick();
@@ -111,11 +138,20 @@ export default function EditProfile({
               alt="User Profile"
               className="max-w-none max-h-none m-0 relative w-40"
             />
+            {preview && (
+              <img
+                src={preview}
+                alt="Uploaded preview"
+                className="max-w-none max-h-none m-0 absolute top-0 left-0 z-10 w-40"
+              />
+            )}
             <input
               type="file"
               name="profile"
               id="profile"
-              className="w-full aspect-square absolute z-10 opacity-0"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="w-full aspect-square absolute z-20 opacity-0"
             />
             <img
               src="/chat/editProfile.svg"
@@ -129,64 +165,49 @@ export default function EditProfile({
                 Achievements
               </p>
               <div className="px-3 bg-greenMain rounded-full font-poppins text-darkMain font-semibold text-sm">
-                6<span className="text-darkSoft opacity-40">/15</span>
+                {achievements.length}
+                <span className="text-darkSoft opacity-40">/4</span>
               </div>
             </div>
             <div className="flex flex-row justify-start w-full items-center gap-2 overflow-scroll no-scrollbar">
               <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
                 <img
-                  src="/chat/default-profile.png"
+                  src="/chat/Conversation-Starter.svg"
                   alt=""
-                  className="max-w-none max-h-none m-0 w-full"
+                  className={`max-w-none max-h-none m-0 w-full ${
+                    achievements.includes("Conversation_Starter")
+                      ? ""
+                      : "grayscale"
+                  }`}
                 />
               </div>
               <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
                 <img
-                  src="/chat/default-profile.png"
+                  src="/chat/Curious.svg"
                   alt=""
-                  className="max-w-none max-h-none m-0 w-full"
+                  className={`max-w-none max-h-none m-0 w-full ${
+                    achievements.includes("Curious") ? "" : "grayscale"
+                  }`}
                 />
               </div>
               <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
                 <img
-                  src="/chat/default-profile.png"
+                  src="/chat/Fun-Talker.svg"
                   alt=""
-                  className="max-w-none max-h-none m-0 w-full"
+                  className={`max-w-none max-h-none m-0 w-full ${
+                    achievements.includes("Fun_Talker") ? "" : "grayscale"
+                  }`}
                 />
               </div>
               <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
                 <img
-                  src="/chat/default-profile.png"
+                  src="/chat/Knowledge-Spreader.svg"
                   alt=""
-                  className="max-w-none max-h-none m-0 w-full"
-                />
-              </div>
-              <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
-                <img
-                  src="/chat/default-profile.png"
-                  alt=""
-                  className="max-w-none max-h-none m-0 w-full"
-                />
-              </div>
-              <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
-                <img
-                  src="/chat/default-profile.png"
-                  alt=""
-                  className="max-w-none max-h-none m-0 w-full"
-                />
-              </div>
-              <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
-                <img
-                  src="/chat/default-profile.png"
-                  alt=""
-                  className="max-w-none max-h-none m-0 w-full"
-                />
-              </div>
-              <div className="w-full aspect-square max-w-12 min-w-12 flex justify-center items-center relative overflow-hidden">
-                <img
-                  src="/chat/default-profile.png"
-                  alt=""
-                  className="max-w-none max-h-none m-0 w-full"
+                  className={`max-w-none max-h-none m-0 w-full ${
+                    achievements.includes("Knowledge_Spreader")
+                      ? ""
+                      : "grayscale"
+                  }`}
                 />
               </div>
             </div>
@@ -238,7 +259,8 @@ export default function EditProfile({
                 Achievements
               </p>
               <div className="px-3 bg-greenMain rounded-full font-poppins text-darkMain font-semibold text-sm">
-                6<span className="text-darkSoft opacity-40">/15</span>
+                {achievements.length}
+                <span className="text-darkSoft opacity-40">/4</span>
               </div>
             </div>
             <button onClick={onClick}>
@@ -253,72 +275,56 @@ export default function EditProfile({
           <div className="w-full grid grid-flow-row md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 ">
             <div className="w-full aspect-square max-w-32 flex justify-center items-center relative overflow-visible group">
               <img
-                src="/chat/default-profile.png"
+                src="/chat/Conversation-Starter.svg"
                 alt=""
-                className="max-w-none max-h-none m-0 w-full"
+                className={`max-w-none max-h-none m-0 w-full ${
+                  achievements.includes("Conversation_Starter")
+                    ? ""
+                    : "grayscale"
+                }`}
               />
               <div className="absolute whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-bottom-3 transition-all duration-150 -bottom-0 font-poppins text-sm text-center font-medium text-darkMain bg-greenMain rounded-full px-4">
-                Conversation Starter
+                {achievements.includes("Conversation_Starter")
+                  ? "Conversation Starter"
+                  : "???"}
               </div>
             </div>
             <div className="w-full aspect-square max-w-32 flex justify-center items-center relative overflow-visible group">
               <img
-                src="/chat/default-profile.png"
+                src="/chat/Curious.svg"
                 alt=""
-                className="max-w-none max-h-none m-0 w-full"
+                className={`max-w-none max-h-none m-0 w-full ${
+                  achievements.includes("Curious") ? "" : "grayscale"
+                }`}
               />
               <div className="absolute whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-bottom-3 transition-all duration-150 -bottom-0 font-poppins text-sm text-center font-medium text-darkMain bg-greenMain rounded-full px-4">
-                Conversation Starter
+                {achievements.includes("Curious") ? "Curious" : "???"}
               </div>
             </div>
             <div className="w-full aspect-square max-w-32 flex justify-center items-center relative overflow-visible group">
               <img
-                src="/chat/default-profile.png"
+                src="/chat/Fun-Talker.svg"
                 alt=""
-                className="max-w-none max-h-none m-0 w-full"
+                className={`max-w-none max-h-none m-0 w-full ${
+                  achievements.includes("Fun_Talker") ? "" : "grayscale"
+                }`}
               />
               <div className="absolute whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-bottom-3 transition-all duration-150 -bottom-0 font-poppins text-sm text-center font-medium text-darkMain bg-greenMain rounded-full px-4">
-                Conversation Starter
+                {achievements.includes("Fun_Talker") ? "Fun Talker" : "???"}
               </div>
             </div>
             <div className="w-full aspect-square max-w-32 flex justify-center items-center relative overflow-visible group">
               <img
-                src="/chat/default-profile.png"
+                src="/chat/Knowledge-Spreader.svg"
                 alt=""
-                className="max-w-none max-h-none m-0 w-full"
+                className={`max-w-none max-h-none m-0 w-full ${
+                  achievements.includes("Knowledge_Spreader") ? "" : "grayscale"
+                }`}
               />
               <div className="absolute whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-bottom-3 transition-all duration-150 -bottom-0 font-poppins text-sm text-center font-medium text-darkMain bg-greenMain rounded-full px-4">
-                Conversation Starter
-              </div>
-            </div>
-            <div className="w-full aspect-square max-w-32 flex justify-center items-center relative overflow-visible group">
-              <img
-                src="/chat/default-profile.png"
-                alt=""
-                className="max-w-none max-h-none m-0 w-full"
-              />
-              <div className="absolute whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-bottom-3 transition-all duration-150 -bottom-0 font-poppins text-sm text-center font-medium text-darkMain bg-greenMain rounded-full px-4">
-                Conversation Starter
-              </div>
-            </div>
-            <div className="w-full aspect-square max-w-32 flex justify-center items-center relative overflow-visible group">
-              <img
-                src="/chat/default-profile.png"
-                alt=""
-                className="max-w-none max-h-none m-0 w-full"
-              />
-              <div className="absolute whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-bottom-3 transition-all duration-150 -bottom-0 font-poppins text-sm text-center font-medium text-darkMain bg-greenMain rounded-full px-4">
-                Conversation Starter
-              </div>
-            </div>
-            <div className="w-full aspect-square max-w-32 flex justify-center items-center relative overflow-visible group">
-              <img
-                src="/chat/default-profile.png"
-                alt=""
-                className="max-w-none max-h-none m-0 w-full"
-              />
-              <div className="absolute whitespace-nowrap opacity-0 group-hover:opacity-100 group-hover:-bottom-3 transition-all duration-150 -bottom-0 font-poppins text-sm text-center font-medium text-darkMain bg-greenMain rounded-full px-4">
-                Conversation Starter
+                {achievements.includes("Knowledge_Spreader")
+                  ? "Knowledge Spreader"
+                  : "???"}
               </div>
             </div>
           </div>

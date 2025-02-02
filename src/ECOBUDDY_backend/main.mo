@@ -15,7 +15,7 @@ import AiService "services/AiService";
 import DailyQuest "services/DailyQuest";
 import DailyQuiz "services/DailyQuiz";
 import ExpService "services/ExpService";
-import LevelandAchievementService "services/LevelandAchievementService";
+import AchievementService "services/AchievementService";
 
 import Types "types/Types";
 
@@ -37,14 +37,13 @@ actor EcoBuddy {
     Principal.equal,
     Principal.hash,
   );
-
-  private var messageRecords : Types.Messages = HashMap.HashMap<Text, Types.Message>(
+  private var achievementProgs : Types.AchievementProgs = HashMap.HashMap<Principal, Types.AchievementProg>(
     10,
-    Text.equal,
-    Text.hash,
+    Principal.equal,
+    Principal.hash,
   );
 
-  private var avatarList : Types.Avatars = HashMap.HashMap<Text, Types.Avatar>(
+  private var messageRecords : Types.Messages = HashMap.HashMap<Text, Types.Message>(
     10,
     Text.equal,
     Text.hash,
@@ -72,12 +71,15 @@ actor EcoBuddy {
   private stable var usersEntries : [(Principal, Types.User)] = [];
   private stable var dailyQuestsEntries : [(Principal, Types.DailyQuest)] = [];
   private stable var dailyQuizsEntries : [(Principal, Types.DailyQuiz)] = [];
+  private stable var achievementProgsEntries : [(Principal, Types.AchievementProg)] = [];
 
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
     usersEntries := Iter.toArray(users.entries());
     dailyQuestsEntries := Iter.toArray(dailyQuests.entries());
     dailyQuizsEntries := Iter.toArray(dailyQuizs.entries());
+    achievementProgsEntries := Iter.toArray(achievementProgs.entries());
+    
   };
   system func postupgrade() {
     users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
@@ -86,6 +88,9 @@ actor EcoBuddy {
     dailyQuestsEntries := [];
     dailyQuizs := HashMap.fromIter<Principal, Types.DailyQuiz>(dailyQuizsEntries.vals(), 0, Principal.equal, Principal.hash);
     dailyQuizsEntries := [];
+    
+    achievementProgs := HashMap.fromIter<Principal, Types.AchievementProg>(achievementProgsEntries.vals(), 0, Principal.equal, Principal.hash);
+    achievementProgsEntries := [];
   };
 
   // USERS ------------------------------------------------------------------ USERS
@@ -118,7 +123,6 @@ actor EcoBuddy {
     switch (userData) {
       case (null) { #err("User not found") };
       case (?currentUser) {
-        Debug.print(debug_show(currentUser));
         switch (res) {
           case(#err(s)) { 
             passAnswer := "";
@@ -274,11 +278,15 @@ actor EcoBuddy {
 
   public func checkAchievement(userId : Principal, currentUser : Types.User, solution : Text, input : Text) : async Bool {
     var achievements : [Text] = [];
+    // AMBIL SEMUA ACHIEVEMENT YANG SUDAH USER MILIKI
     let achievementResult = await getAchievement(userId);
+    Debug.print("Achievement Result :");
+    Debug.print(debug_show(achievementResult));
+    let achievementProgress = await AchievementService.getUserProgress(userId, achievementProgs);
 
     if (achievementResult) {
       // CONVERSATION STARTER ACHIEVEMENT
-      if (Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
+      if (Array.find<Text>(AchievementCollected, func(x) { x == "Conversation_Starter" }) == null) {
         let conversation_starter_result = await unlockAchievement("Conversation_Starter", userId);
         switch (conversation_starter_result) {
           case (#err(_)) {};
@@ -289,11 +297,16 @@ actor EcoBuddy {
       };
 
       // FUN TALKER ACHIEVEMENT
-      if ((Text.contains(solution, #text "🌱") or Text.contains(solution, #text "🌍")) and EmojiCount != 5) {
-        EmojiCount += 1;
+      if ((Text.contains(solution, #text "🌱") or Text.contains(solution, #text "🌍")) and achievementProgress.emojiCount != 5) {
+        let newData = {
+          emojiCount = achievementProgress.emojiCount + 1;
+          messageCount = achievementProgress.messageCount;
+          questionCount = achievementProgress.questionCount;
+        };
+        achievementProgs.put(userId, newData);
       };
 
-      if (EmojiCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
+      if (achievementProgress.emojiCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
         let fun_talker_result = await unlockAchievement("Fun_Talker", userId);
         switch (fun_talker_result) {
           case (#err(_)) {};
@@ -304,11 +317,16 @@ actor EcoBuddy {
       };
 
       // KNOWLEDGE SPREADER ACHIEVEMENT
-      if (messageCount < 10) {
-        messageCount += 1;
+      if (achievementProgress.messageCount < 10) {
+        let newData = {
+          emojiCount = achievementProgress.emojiCount;
+          messageCount = achievementProgress.messageCount + 1;
+          questionCount = achievementProgress.questionCount;
+        };
+        achievementProgs.put(userId, newData);
       };
 
-      if (messageCount >= 10 and Array.find<Text>(AchievementCollected, func(x) { x == "Knowledge_Spreader" }) == null) {
+      if (achievementProgress.messageCount >= 10 and Array.find<Text>(AchievementCollected, func(x) { x == "Knowledge_Spreader" }) == null) {
         let knowledge_spreader_result = await unlockAchievement("Knowledge_Spreader", userId);
         switch (knowledge_spreader_result) {
           case (#err(_)) {};
@@ -319,11 +337,16 @@ actor EcoBuddy {
       };
 
       // CURIOUS STARTER ACHIEVEMENT
-      if (Text.contains(input, #text "?") and questionCount < 5) {
-        questionCount += 1;
+      if (Text.contains(input, #text "?") and achievementProgress.questionCount < 5) {
+        let newData = {
+          emojiCount = achievementProgress.emojiCount;
+          messageCount = achievementProgress.messageCount;
+          questionCount = achievementProgress.questionCount + 1;
+        };
+        achievementProgs.put(userId, newData);
       };
 
-      if (questionCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Curious_Starter" }) == null) {
+      if (achievementProgress.questionCount >= 5 and Array.find<Text>(AchievementCollected, func(x) { x == "Curious_Starter" }) == null) {
         let curious_starter_result = await unlockAchievement("Curious_Starter", userId);
         switch (curious_starter_result) {
           case (#err(_)) {};
@@ -332,21 +355,6 @@ actor EcoBuddy {
           };
         };
       };
-
-      // update users type
-      let updatedUser = {
-        id = currentUser.id;
-        walletAddress = currentUser.walletAddress;
-        username = currentUser.username;
-        achievements = achievements;
-        expPoints = currentUser.expPoints;
-        level = currentUser.level;
-        avatar = currentUser.avatar;
-        profile = currentUser.profile;
-      };
-
-      users.put(userId, updatedUser);
-
       return true;
     } else {
       return false;
@@ -354,7 +362,8 @@ actor EcoBuddy {
   };
 
   public func unlockAchievement(AchievementType : Text, userId : Principal) : async Result.Result<Text, Text> {
-    return await LevelandAchievementService.handleUnlockAchievement(AchievementType, userId, users);
+    Debug.print(debug_show(AchievementType));
+    return await AchievementService.handleUnlockAchievement(AchievementType, userId, users);
   };
 
   // TRANSACTION & WALLET ------------------------------------------------------------------- TRANSACTION & WALLET

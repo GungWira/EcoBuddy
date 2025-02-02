@@ -58,7 +58,7 @@ export default function LoadingResult({ setIsCalculate }: LoadingResult) {
 
   return (
     <div
-      className={`w-screen h-screen absolute flex flex-col justify-center items-center transition-all ease-in-out duration-500 gap-4`}
+      className={`w-screen h-screen absolute flex flex-col justify-center items-center transition-all ease-in-out duration-500 gap-4 px-8`}
     >
       <div className="w-screen h-screen absolute flex justify-center items-center">
         <div
@@ -94,8 +94,10 @@ export default function LoadingResult({ setIsCalculate }: LoadingResult) {
           </p>
         </div>
         {/* NOTIF */}
-        <div className="w-fit bottom-16 absolute px-6 py-2 rounded-full bg-[#6D7134] border border-[#E0EA53] text-center font-poppins text-white font-medium text-base">
-          Note: Do not refresh the page to avoid interrupting process.
+        <div className="w-full px-8 flex justify-center items-center absolute bottom-16">
+          <div className="w-full max-w-fit px-6 py-2 rounded-full bg-[#6D7134] border border-[#E0EA53] text-center font-poppins text-white font-medium text-sm sm:text-sm md:text-base">
+            Note: Do not refresh the page to avoid interrupting process.
+          </div>
         </div>
       </div>
     </div>

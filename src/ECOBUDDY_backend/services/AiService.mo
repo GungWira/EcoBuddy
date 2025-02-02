@@ -60,7 +60,7 @@ module {
 
         Debug.print("DECODED-TEXT : "#debug_show(decoded_text));
         Debug.print("Checking for 'null': " # debug_show(Text.contains(decoded_text, #text "null")));
-        let sanitized_text = Text.replace(decoded_text, #text "null", "\"\"");
+        // let sanitized_text = Text.replace(decoded_text, #text "null", "\"\""); //GPT
 
         switch(JSON.parse(decoded_text)){ // GEMINI
         // switch(JSON.parse(sanitized_text)){ // GPT
