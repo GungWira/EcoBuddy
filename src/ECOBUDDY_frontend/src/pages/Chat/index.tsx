@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Shine from "../../components/Shine";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Bot from "../../components/Chat/Bot";
 import SugestChat from "../../components/Chat/SugestChat";
 import Comand from "../../components/Chat/Comand";
@@ -10,11 +10,23 @@ import EditProfile from "../../components/Chat/EditProfile";
 import { useAuth } from "../../hooks/AuthProvider";
 import { useNavigate } from "react-router-dom";
 import LoadingDots from "../../components/Chat/LoadingDots";
+import Menu from "../../components/Chat/Menu";
+import DailyQuest from "../../components/Chat/DailyQuest";
 
 export default function Chat() {
   const navigate = useNavigate();
 
-  const { logout, principal, user, loading, callFunction, isAuth } = useAuth();
+  const {
+    logout,
+    principal,
+    user,
+    loading,
+    callFunction,
+    isAuth,
+    updateUser,
+    dailyQuest,
+    updateDailyQuest,
+  } = useAuth();
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
@@ -23,11 +35,12 @@ export default function Chat() {
   const [response, setResponse] = useState<string[]>([]);
   const [myBuddy, setMyBuddy] = useState({
     level: 1,
-    title: "Almost There! EcoBuddy is Leveling Up with You!",
+    title:
+      "I’m <span className='text-green-500'>Ecobuddy</span>, Your AI Assistant",
     description:
-      "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
+      "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
     isIntro: true,
-    prog: 10,
+    prog: 0,
   });
 
   const [username, setUsername] = useState<string | undefined>(user?.username);
@@ -37,6 +50,7 @@ export default function Chat() {
   const [level, setLevel] = useState<number | undefined>(user?.level);
   const [isGenerateAnswer, setIsGenerateAnswer] = useState<Boolean>(false);
   const [isFinishTyping, setIsFinishTyping] = useState(true);
+  const [isDailyQuest, setIsDailyQuest] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +59,7 @@ export default function Chat() {
       setUsername(user.username);
       setWalletAddres(user.walletAddres);
       setLevel(Number(user.level));
+
       setMyBuddy({
         level: Number(user.level),
         title:
@@ -52,7 +67,7 @@ export default function Chat() {
         description:
           "Chat with EcoBuddy, gain XP, level up, and unlock fun features. Let’s grow together for a greener future!",
         isIntro: true,
-        prog: 0,
+        prog: Number(user.expPoints),
       });
     } else {
     }
@@ -66,7 +81,7 @@ export default function Chat() {
         description:
           "You're making great progress! Just a few more steps and EcoBuddy will reach the next level.",
         isIntro: false,
-        prog: 0,
+        prog: Number(user.expPoints),
       });
       setIsIntro(true);
     }
@@ -81,9 +96,31 @@ export default function Chat() {
       setUserInput("");
 
       try {
-        const botAns = await callFunction.askBot(input);
+        const botAns = await callFunction.askBot(input, principal);
         setIsGenerateAnswer(false);
-        setResponse((prev) => [...prev, botAns]);
+        if ("err" in botAns) {
+          setResponse((prev) => [...prev, botAns.err]);
+        } else {
+          setResponse((prev) => [...prev, botAns.ok.solution]);
+          updateUser({
+            id: principal,
+            username: username,
+            level: level,
+            walletAddres: walletAddres,
+            expPoints: botAns.ok.exp,
+            achievements: user.achievements,
+            avatar: user.avatar,
+            profile: user.profile,
+          });
+          if (dailyQuest) {
+            updateDailyQuest({
+              login: dailyQuest.login,
+              date: dailyQuest.date,
+              chatCount: dailyQuest.chatCount + 1,
+              quizCount: dailyQuest.quizCount,
+            });
+          }
+        }
       } catch (error) {
         console.error("Fetch error:", error);
       }
@@ -141,6 +178,13 @@ export default function Chat() {
             onClick={() => setIsEditProfile(false)}
           />
 
+          {/* DAILY QUEST */}
+          <DailyQuest
+            dailyQuest={dailyQuest}
+            hidden={!isDailyQuest}
+            onClick={() => setIsDailyQuest(false)}
+          />
+
           <div
             className={`w-screen h-screen fixed top-0 left-0 inset-0 bg-darkMain bg-opacity-50 backdrop-blur-md transition-all ease-in-out duration-300 ${
               isWallet || isEditProfile || isIntro
@@ -156,7 +200,7 @@ export default function Chat() {
               <div className="flex flex-col justify-center items-center max-w-3xl gap-8 w-full relative bottom-8 px-4 sm:px-8">
                 <div className="flex flex-col justify-center items-center gap-2">
                   <img
-                    src={`/chat/bot-lv-1.svg`}
+                    src={user ? user.avatar : `/chat/bot-lv-1.svg`}
                     alt="Bot"
                     className="w-24 max-w-none max-h-none"
                   />
@@ -257,94 +301,97 @@ export default function Chat() {
                       </Shine>
                     </div>
                   </div>
-                  <button
-                    typeof="button"
-                    className="w-fit max-w-36 rounded-full px-2 gap-2 py-1 border border-whiteSoft flex flex-row justify-start items-center relative group"
-                  >
-                    <img
-                      src="/chat/default-profile.png"
-                      alt="User Profile"
-                      className="max-w-none max-h-none m-0 rounded-full w-6"
-                    />
-                    <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base pr-2">
-                      {username}
-                    </p>
-                    {/* MORE NAVBAR */}
-                    <div className="group-hover:flex hover:flex w-80 absolute top-8 right-0 hidden">
-                      <div className="flex-col justify-start items-start w-80 rounded-xl bg-darkSoft border border-whiteSoft px-4 relative top-2">
-                        {/* ECOBUDDY */}
-                        <button
-                          className="flex justify-start items-center gap-4 py-4 border-b border-whiteSoft w-full hover:ps-2 transition-all ease-in-out duration-150"
-                          onClick={() => handlerMyBuddy()}
-                        >
-                          <img
-                            src="/chat/bot-icon.svg"
-                            alt="Bot Icon"
-                            className="max-w-none max-h-none m-0 w-6"
-                          />
-                          <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
-                            My Ecobuddy
-                          </p>
-                        </button>
-                        {/* WALLET */}
-                        <button
-                          className="flex justify-start items-center gap-4 py-3 pt-4 w-full hover:ps-2 transition-all ease-in-out duration-150"
-                          onClick={() => setIsWallet(true)}
-                        >
-                          <img
-                            src="/chat/wallet-icon.svg"
-                            alt="Bot Icon"
-                            className="max-w-none max-h-none m-0 w-6"
-                          />
-                          <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
-                            Wallet
-                          </p>
-                        </button>
-                        {/* PROFILE */}
-                        <button
-                          className="flex justify-start items-center gap-4 py-3 w-full hover:ps-2 transition-all ease-in-out duration-150"
-                          onClick={() => setIsEditProfile(true)}
-                        >
-                          <img
-                            src="/chat/profile-icon.svg"
-                            alt="Bot Icon"
-                            className="max-w-none max-h-none m-0 w-6"
-                          />
-                          <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
-                            Edit Profile
-                          </p>
-                        </button>
-                        {/* PREMIUM */}
-                        <Link
-                          to={"/chat/premium"}
-                          className="flex justify-start items-center gap-4 py-3 pb-4 border-b border-whiteSoft w-full hover:ps-2 transition-all ease-in-out duration-150"
-                        >
-                          <img
-                            src="/chat/premium-icon.svg"
-                            alt="Bot Icon"
-                            className="max-w-none max-h-none m-0 w-6"
-                          />
-                          <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
-                            Premium Plan
-                          </p>
-                        </Link>
-                        {/* LOGOUT */}
-                        <button
-                          className="flex justify-start items-center gap-4 py-4 w-full hover:ps-2 transition-all ease-in-out duration-150"
-                          onClick={handlerLogout}
-                        >
-                          <img
-                            src="/chat/logout-icon.svg"
-                            alt="Bot Icon"
-                            className="max-w-none max-h-none m-0 w-6"
-                          />
-                          <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
-                            Logout
-                          </p>
-                        </button>
+                  <div className="flex flex-row justify-end items-center gap-4">
+                    <button
+                      typeof="button"
+                      className="w-fit max-w-36 rounded-full px-2 gap-2 py-1 border border-whiteSoft flex flex-row justify-start items-center relative group z-10"
+                    >
+                      <img
+                        src="/chat/default-profile.png"
+                        alt="User Profile"
+                        className="max-w-none max-h-none m-0 rounded-full w-6"
+                      />
+                      <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base pr-2">
+                        {username}
+                      </p>
+                      {/* MORE NAVBAR */}
+                      <div className="group-hover:flex hover:flex w-80 absolute top-8 right-0 hidden z-10">
+                        <div className="flex-col justify-start items-start w-80 rounded-xl bg-darkSoft border border-whiteSoft px-4 relative top-2">
+                          {/* ECOBUDDY */}
+                          <button
+                            className="flex justify-start items-center gap-4 py-4 border-b border-whiteSoft w-full hover:ps-2 transition-all ease-in-out duration-150"
+                            onClick={() => handlerMyBuddy()}
+                          >
+                            <img
+                              src="/chat/bot-icon.svg"
+                              alt="Bot Icon"
+                              className="max-w-none max-h-none m-0 w-6"
+                            />
+                            <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
+                              My Ecobuddy
+                            </p>
+                          </button>
+                          {/* WALLET */}
+                          <button
+                            className="flex justify-start items-center gap-4 py-3 pt-4 w-full hover:ps-2 transition-all ease-in-out duration-150"
+                            onClick={() => setIsWallet(true)}
+                          >
+                            <img
+                              src="/chat/wallet-icon.svg"
+                              alt="Bot Icon"
+                              className="max-w-none max-h-none m-0 w-6"
+                            />
+                            <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
+                              Wallet
+                            </p>
+                          </button>
+                          {/* PROFILE */}
+                          <button
+                            className="flex justify-start items-center gap-4 py-3 w-full hover:ps-2 transition-all ease-in-out duration-150"
+                            onClick={() => setIsEditProfile(true)}
+                          >
+                            <img
+                              src="/chat/profile-icon.svg"
+                              alt="Bot Icon"
+                              className="max-w-none max-h-none m-0 w-6"
+                            />
+                            <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
+                              Edit Profile
+                            </p>
+                          </button>
+                          {/* PREMIUM */}
+                          <Link
+                            to={"/chat/premium"}
+                            className="flex justify-start items-center gap-4 py-3 pb-4 border-b border-whiteSoft w-full hover:ps-2 transition-all ease-in-out duration-150"
+                          >
+                            <img
+                              src="/chat/premium-icon.svg"
+                              alt="Bot Icon"
+                              className="max-w-none max-h-none m-0 w-6"
+                            />
+                            <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
+                              Premium Plan
+                            </p>
+                          </Link>
+                          {/* LOGOUT */}
+                          <button
+                            className="flex justify-start items-center gap-4 py-4 w-full hover:ps-2 transition-all ease-in-out duration-150"
+                            onClick={handlerLogout}
+                          >
+                            <img
+                              src="/chat/logout-icon.svg"
+                              alt="Bot Icon"
+                              className="max-w-none max-h-none m-0 w-6"
+                            />
+                            <p className="font-poppins text-white opacity-80 font-semibold text-sm sm:text-sm md:text-base">
+                              Logout
+                            </p>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                    <Menu onClick={() => setIsDailyQuest(true)} />
+                  </div>
                 </div>
               </div>
 

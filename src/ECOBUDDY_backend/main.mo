@@ -5,11 +5,19 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
+
+import UserService "services/UserService";
+import AiService "services/AiService";
+import DailyQuest "services/DailyQuest";
+import DailyQuiz "services/DailyQuiz";
+import ExpService "services/ExpService";
+
 import Time "mo:base/Time";
 import Array "mo:base/Array";
 import Bool "mo:base/Bool";
 import Debug "mo:base/Debug";
 import Nat64 "mo:base/Nat64";
+
 import IcpLedger "canister:icp_ledger_canister";
 
 import Types "types/Types";
@@ -31,7 +39,13 @@ actor class EcoBuddy() = this {
     Principal.hash,
   );
 
-   private var userLevel : Types.LevelDetails = HashMap.HashMap<Principal, Types.LevelDetail>(
+  private var userLevel : Types.LevelDetails = HashMap.HashMap<Principal, Types.LevelDetail>(
+  private var dailyQuests : Types.DailyQuests = HashMap.HashMap<Principal, Types.DailyQuest>(
+    10,
+    Principal.equal,
+    Principal.hash,
+  );
+  private var dailyQuizs : Types.DailyQuizs = HashMap.HashMap<Principal, Types.DailyQuiz>(
     10,
     Principal.equal,
     Principal.hash,
@@ -74,11 +88,13 @@ actor class EcoBuddy() = this {
   stable var AchievementCollected : [Text] = [];
 
   // DATA ENTRIES
-  stable var usersEntries : [(Principal, Types.User)] = [];
-  stable var userLevelEntries : [(Principal, Types.LevelDetail)] = [];
-  stable var messageRecordsEntries : [(Text, Types.Message)] = [];
-  stable var avatarListEntries : [(Text, Types.Avatar)] = [];
-  stable var userBalancesEntries : [(Principal, Types.UserBalance)] = [];
+  private stable var usersEntries : [(Principal, Types.User)] = [];
+  private stable var userLevelEntries : [(Principal, Types.LevelDetail)] = [];
+  private stable var messageRecordsEntries : [(Text, Types.Message)] = [];
+  private stable var avatarListEntries : [(Text, Types.Avatar)] = [];
+  private stable var userBalancesEntries : [(Principal, Types.UserBalance)] = [];
+  private stable var dailyQuestsEntries : [(Principal, Types.DailyQuest)] = [];
+  private stable var dailyQuizsEntries : [(Principal, Types.DailyQuiz)] = [];
 
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
@@ -87,6 +103,8 @@ actor class EcoBuddy() = this {
     messageRecordsEntries := Iter.toArray(messageRecords.entries());
     avatarListEntries := Iter.toArray(avatarList.entries());
     userBalancesEntries := Iter.toArray(userBalances.entries());
+    dailyQuestsEntries := Iter.toArray(dailyQuests.entries());
+    dailyQuizsEntries := Iter.toArray(dailyQuizs.entries());
   };
 
   system func postupgrade() {
@@ -101,6 +119,10 @@ actor class EcoBuddy() = this {
     messageRecordsEntries := [];
     avatarListEntries := [];
     userBalancesEntries := [];
+    dailyQuests := HashMap.fromIter<Principal, Types.DailyQuest>(dailyQuestsEntries.vals(), 0, Principal.equal, Principal.hash);
+    dailyQuestsEntries := [];
+    dailyQuizs := HashMap.fromIter<Principal, Types.DailyQuiz>(dailyQuizsEntries.vals(), 0, Principal.equal, Principal.hash);
+    dailyQuizsEntries := [];
   };
 
   // USERS ------------------------------------------------------------------ USERS
@@ -122,26 +144,44 @@ actor class EcoBuddy() = this {
     return await UserService.updateUser(users, msg.caller, data);
   };
 
-  // AI RESPONSE ------------------------------------------------------------------- AI RESPONSE
+  // AI ------------------------------------------------------------------- AI
   var passAnswer : Text = "";
 
   public func askBot(input : Text, userId : Principal) : async Result.Result<Types.ResponseAI, Text> {
-
-    let res = await AiService.httpReq(input, passAnswer);
+    let res = await AiService.askBot(input, passAnswer);
     let generatedUUID = AiService.generateUUID();
     let userData = users.get(userId);
 
     switch (userData) {
       case (null) { #err("User not found") };
       case (?currentUser) {
+        Debug.print(debug_show(currentUser));
         switch (res) {
-          case (#err(s)) { #err s };
+          case(#err(s)) { 
+            passAnswer := "";
+            #err s 
+          };
           case (#ok(result)) {
-            let addUserEXP = await addExp(Int.abs(result.exp), userId);
+            // CHECK ACHIEVEMENT
+            let _ = await checkAchievement(userId, currentUser, result.solution, input);
+            // ADD QUEST
+            let userDailyQuest = await DailyQuest.addChatCount(userId, dailyQuests);
+            let expQuest = switch(userDailyQuest){
+              case(#ok(userDailyQuestValid)){
+                if(userDailyQuestValid.chatCount == 10){ 20 }else{ 0 }
+              };
+              case (_){
+                0
+              };
+            };
+            
+            // ADD USER EXP
+            let addUserEXP = await addExp(Int.abs(result.exp + expQuest), userId);
             switch (addUserEXP) {
               case (#err(_)) { #err("Error Adding User EXP") };
               case (#ok(expOk)) {
-                var final = {
+                passAnswer := result.solution;
+                let final = {
                   solution = result.solution;
                   exp = expOk;
                 };
@@ -157,7 +197,6 @@ actor class EcoBuddy() = this {
                   },
                 );
 
-                let _ = await checkAchievement(userId, currentUser, result.solution, input);
 
                 #ok final;
               };
@@ -168,7 +207,76 @@ actor class EcoBuddy() = this {
       };
     };
   };
-  // ACHIEVEMENT
+
+  public func askQuiz(theme : Text) : async Result.Result <Text, Text> {
+    let res = await AiService.askQuiz(theme);
+    res;
+  };
+
+  // DAILY QUEST ------------------------------------------------------------------- DAILY QUEST
+  public func checkDailyQuest(userId : Principal, date : Text) : async Result.Result<Types.DailyQuest, Text> {
+    let currentQuest = DailyQuest.checkDailyQuest(userId, dailyQuests, date);
+    switch(currentQuest){
+      case(#err(t)){
+        Debug.print(debug_show(t));
+        return currentQuest;
+      };
+      case(#ok(validData)){
+        if(validData.login == true){
+          // IF LOGIN, RETURN DATA
+          Debug.print(debug_show("User allready login this day")); 
+          return currentQuest;
+        }else{
+          // IF NOT LOGIN, ADD EXP 20 TO USER
+          let _exp = addExp(20, userId);
+          let newData = {
+            login = true;
+            date = validData.date;
+            chatCount = validData.chatCount;
+            quizCount = validData.quizCount;
+          };
+          dailyQuests.put(userId, newData);
+          return #ok newData;
+        };
+      };
+    };
+  };
+
+  // DAILY QUIZZ ------------------------------------------------------------------- DAILY QUIZZ
+  public shared func getDailyQuizs (userId : Principal, date : Text, id1 : Text, id2 : Text, id3 : Text ) : async Result.Result<Types.DailyQuiz, Text> {
+    let userQuiz = await DailyQuiz.getDailyQuizs(userId, date, dailyQuizs, id1, id2, id3);
+    switch(userQuiz){
+      case (#ok (valid)){
+        #ok valid;
+      };
+      case(#err(t)){
+        #err t
+      };
+    };
+  };
+
+  public shared func submitDailyQuiz (userId : Principal, id : Text, exp : Text) : async Result.Result<Types.DailyQuiz, Text>{
+    let userQuiz = await DailyQuiz.submitDailyQuiz(userId, id, dailyQuizs);
+    
+    switch(userQuiz){
+      case (#ok (valid)){
+        let expUser = switch(Nat.fromText(exp)){
+          case (?isNat){
+            isNat
+          };
+          case (null){
+            0
+          };
+        };
+        let addExpUser = await addExp(expUser, userId);
+        Debug.print(debug_show(addExpUser));
+        #ok valid;
+      };
+      case(#err(t)){
+        #err t
+      };
+    };
+  };
 
   // EXP POINT ------------------------------------------------------------------- EXP POINT
   public func addExp(expPoint : Nat, userId : Principal) : async Result.Result<Nat, Text> {
@@ -180,23 +288,6 @@ actor class EcoBuddy() = this {
   };
 
   // LEVEL & ACHIEVEMENT-------------------------------------------------------------------- LEVEL & ACHIEVEMENT
-  public func getUserLevelDetail(userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
-    return await LevelandAchievementService.handleGetUserLevelDetail(userId, userLevel);
-  };
-
-  public func upgradeLevel(level : Nat, userId : Principal) : async Result.Result<Types.LevelDetail, Text> {
-    return await LevelandAchievementService.handleUpgradeLevel(level, userId, userLevel, users);
-  };
-
-  // RUN THIS FUNCTION WHEN CANISTER IS DEPLOYED
-  public func addAvatar() : async Text {
-    return await LevelandAchievementService.handleAddAvatar(avatarList);
-  };
-
-  public func unlockAvatar(level : Nat, userId : Principal) : async Result.Result<Text, Text> {
-    return await LevelandAchievementService.handleUnlockAvatar(level, userId, users, avatarList);
-  };
-
   private func getAchievement(userId : Principal) : async Bool {
     // auth
     if (Principal.isAnonymous(userId)) {
@@ -215,7 +306,7 @@ actor class EcoBuddy() = this {
         AchievementCollected := currentUser.achievements;
         return true;
       };
-    };
+    }
   };
 
   public func checkAchievement(userId : Principal, currentUser : Types.User, solution : Text, input : Text) : async Bool {
@@ -304,11 +395,6 @@ actor class EcoBuddy() = this {
   };
 
   // TRANSACTION & WALLET ------------------------------------------------------------------- TRANSACTION & WALLET
-  // get canister id
-  public query func getPrincipalId() : async Principal {
-    return Principal.fromActor(this);
-  };
-
   // get canister principal
   public query func getEcobuddyPrincipal() : async Principal {
     return ecobuddyPrincipal;
@@ -319,6 +405,7 @@ actor class EcoBuddy() = this {
     return await TransactionService.handleGetAccountBalance(userId, userBalances);
   };
 
+  // func to tranfer icp
   public func transferICP(
     from : Principal,
     to : Principal,
@@ -327,3 +414,4 @@ actor class EcoBuddy() = this {
     return await TransactionService.handleTransferICP(from, to, amount, userBalances);
   };
 };
+
