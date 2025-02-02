@@ -9,10 +9,6 @@ module {
   public type Avatars = HashMap.HashMap<Text, Avatar>;
   public type UserBalances = HashMap.HashMap<Principal, UserBalance>;
   public type LevelDetails = HashMap.HashMap<Principal, LevelDetail>;
-  public type Transactions = HashMap.HashMap<Text, Transaction>;
-  public type Tokens = HashMap.HashMap<Text, Token>;
-  public type TokenTransfers = HashMap.HashMap<Text, TokenTransfer>;
-  public type TokenMetadatas = HashMap.HashMap<Text, TokenMetadata>;
 
   // USER TYPE
   public type User = {
@@ -37,34 +33,6 @@ module {
     profile : ?Text;
   };
 
-  // REQ TYPE
-  public type HttpRequest = {
-    url : Text;
-    max_response_bytes : ?Nat64;
-
-    header_host : Text;
-    header_content_type : Text;
-    header_user_agent : Text;
-
-    body : ?Blob;
-    method : HttpMethod;
-  };
-
-  public type HttpMethod = {
-    #post;
-  };
-
-  public type HttpResponse = {
-    status : Nat;
-    headers : [HttpHeader];
-    body : Blob;
-  };
-
-  public type HttpHeader = {
-    name : Text;
-    value : Text;
-  };
-
   // AI TYPE
   public type ResponseAI = {
     solution : Text;
@@ -85,17 +53,6 @@ module {
     #UserMessage;
   };
 
-  // Tipe untuk sesi chat
-  public type ChatSession = {
-    id : Text;
-    userId : Principal;
-    messages : [Message];
-    createdAt : Int;
-    updatedAt : Int;
-  };
-
-  // Tipe untuk hash dan integritas
-
   // LEVEL TYPES
   public type LevelDetail = {
     userId : Principal;
@@ -111,36 +68,6 @@ module {
     description : Text;
     badge : Text;
     claimedAt : Int;
-  };
-
-  // TRANSACTION TYPES
-  public type Transaction = {
-    id : Text;
-    sender : Principal;
-    receiver : Principal;
-    amount : Nat;
-    currency : Text;
-    timestamp : Int;
-  };
-
-  // TOKEN TYPES
-  public type Token = {
-    id : Text;
-    owner : Principal;
-    metadata : Text;
-    createdAt : Int;
-  };
-
-  public type TokenTransfer = {
-    tokenId : Text;
-    from : Principal;
-    to : Principal;
-    timestamp : Int;
-  };
-
-  public type TokenMetadata = {
-    tokenId : Text;
-    metadata : Text;
   };
 
   // AVATAR TYPES

@@ -5,29 +5,33 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
-
-import Types "types/Types";
-import UserService "services/UserService";
-import AiService "services/AiService";
-import ExpService "services/ExpService";
-
 import Time "mo:base/Time";
 import Array "mo:base/Array";
 import Bool "mo:base/Bool";
 import Debug "mo:base/Debug";
 import Nat64 "mo:base/Nat64";
-import LevelandAchievementService "services/LevelandAchievementService";
 import IcpLedger "canister:icp_ledger_canister";
 
-actor EcoBuddy {
+import Types "types/Types";
+import UserService "services/UserService";
+import AiService "services/AiService";
+import ExpService "services/ExpService";
+import LevelandAchievementService "services/LevelandAchievementService";
+import TransactionService "services/TransactionService";
+
+actor class EcoBuddy() = this {
+  stable var ecobuddyPrincipal : Principal = Principal.fromActor(this);
+
+  Debug.print(debug_show (ecobuddyPrincipal));
+
   // DATA
-  private var users : Types.Users = HashMap.HashMap<Principal, Types.User>(
+   private var users : Types.Users = HashMap.HashMap<Principal, Types.User>(
     10,
     Principal.equal,
     Principal.hash,
   );
 
-  private var userLevel : Types.LevelDetails = HashMap.HashMap<Principal, Types.LevelDetail>(
+   private var userLevel : Types.LevelDetails = HashMap.HashMap<Principal, Types.LevelDetail>(
     10,
     Principal.equal,
     Principal.hash,
@@ -45,20 +49,20 @@ actor EcoBuddy {
     Text.hash,
   );
 
-  let userBalances = HashMap.HashMap<Principal, Types.UserBalance>(
+  private var userBalances: Types.UserBalances = HashMap.HashMap<Principal, Types.UserBalance>(
     10,
     Principal.equal,
     Principal.hash,
   );
 
   // fun talker achievement
-  private var EmojiCount = 0;
+  stable var EmojiCount = 0;
 
   // knowledge seeker achievement
-  private var messageCount : Nat = 0;
+  stable var messageCount : Nat = 0;
 
   // curious starter achievement
-  private var questionCount : Nat = 0;
+  stable var questionCount : Nat = 0;
 
   public type AchievementList = {
     #Conversation_Starter;
@@ -67,18 +71,36 @@ actor EcoBuddy {
     #Knowledge_Spreader;
   };
 
-  private var AchievementCollected : [Text] = [];
+  stable var AchievementCollected : [Text] = [];
 
   // DATA ENTRIES
-  private stable var usersEntries : [(Principal, Types.User)] = [];
+  stable var usersEntries : [(Principal, Types.User)] = [];
+  stable var userLevelEntries : [(Principal, Types.LevelDetail)] = [];
+  stable var messageRecordsEntries : [(Text, Types.Message)] = [];
+  stable var avatarListEntries : [(Text, Types.Avatar)] = [];
+  stable var userBalancesEntries : [(Principal, Types.UserBalance)] = [];
 
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
     usersEntries := Iter.toArray(users.entries());
+    userLevelEntries := Iter.toArray(userLevel.entries());
+    messageRecordsEntries := Iter.toArray(messageRecords.entries());
+    avatarListEntries := Iter.toArray(avatarList.entries());
+    userBalancesEntries := Iter.toArray(userBalances.entries());
   };
+
   system func postupgrade() {
     users := HashMap.fromIter<Principal, Types.User>(usersEntries.vals(), 0, Principal.equal, Principal.hash);
+    userLevel := HashMap.fromIter<Principal, Types.LevelDetail>(userLevelEntries.vals(), 0, Principal.equal, Principal.hash);
+    messageRecords := HashMap.fromIter<Text, Types.Message>(messageRecordsEntries.vals(), 0, Text.equal, Text.hash);
+    avatarList := HashMap.fromIter<Text, Types.Avatar>(avatarListEntries.vals(), 0, Text.equal, Text.hash);
+    userBalances := HashMap.fromIter<Principal, Types.UserBalance>(userBalancesEntries.vals(), 0, Principal.equal, Principal.hash);
+
     usersEntries := [];
+    userLevelEntries := [];
+    messageRecordsEntries := [];
+    avatarListEntries := [];
+    userBalancesEntries := [];
   };
 
   // USERS ------------------------------------------------------------------ USERS
@@ -282,124 +304,26 @@ actor EcoBuddy {
   };
 
   // TRANSACTION & WALLET ------------------------------------------------------------------- TRANSACTION & WALLET
-  // ICP transfer function
-  private func manageUserBalance(
-    userBalances : Types.UserBalances,
-    userId : Principal,
-    amount : Nat,
-    operation : { #increment; #decrement },
-  ) : Result.Result<(), Text> {
-    // function to create new balance record
-    func createNewBalance(amt : Nat) : Types.UserBalance {
-      {
-        id = userId;
-        balance = amt;
-        total_transaction = 0;
-      }
-    };
-
-    // function to update existing balance
-    func updateBalance(current : Types.UserBalance, amt : Nat, isDecrease : Bool) : Types.UserBalance {
-      {
-        id = current.id;
-        balance = if (isDecrease) Nat.sub(current.balance, amt) else current.balance + amt;
-        total_transaction = if (isDecrease) current.total_transaction + amt else current.total_transaction;
-      }
-    };
-
-    let currentBalance = userBalances.get(userId);
-
-    switch (currentBalance, operation) {
-      case (null, #decrement) #err("No balance found for user");
-      case (?balance, #decrement) {
-        if (balance.balance < amount) {
-          #err("Balance insufficient for transaction")
-        } else {
-          userBalances.put(userId, updateBalance(balance, amount, true));
-          #ok()
-        }
-      };
-      case (null, #increment) {
-        userBalances.put(userId, createNewBalance(amount));
-        #ok()
-      };
-      case (?balance, #increment) {
-        userBalances.put(userId, updateBalance(balance, amount, false));
-        #ok()
-      };
-    }
+  // get canister id
+  public query func getPrincipalId() : async Principal {
+    return Principal.fromActor(this);
   };
 
+  // get canister principal
+  public query func getEcobuddyPrincipal() : async Principal {
+    return ecobuddyPrincipal;
+  };
+
+  // get account balance
   public func getAccountBalance(userId : Principal) : async Types.UserBalance {
-    let balance = userBalances.get(userId);
-    switch (balance) {
-      case (null) {
-        return {
-          id = userId;
-          balance = 0;
-          total_transaction = 0;
-        };
-      };
-      case (?value) {
-        return value;
-      };
-    };
+    return await TransactionService.handleGetAccountBalance(userId, userBalances);
   };
-
 
   public func transferICP(
     from : Principal,
     to : Principal,
     amount : Nat64,
   ) : async Result.Result<IcpLedger.BlockIndex, Text> {
-    // Check minimum transfer amount
-    if (amount < 2_000) {
-      return #err("Transfer amount too small. Minimum is 2_000 e8s");
-    };
-
-    // Get account balances
-    let fromBalance = await getAccountBalance(from);
-    if (fromBalance.balance < Nat64.toNat(amount)) {
-      return #err("Insufficient balance");
-    };
-
-    // Update internal balances
-    let fromBalanceResult = manageUserBalance(userBalances, from, Nat64.toNat(amount), #decrement);
-    let toBalanceResult = manageUserBalance(userBalances, to, Nat64.toNat(amount), #increment);
-
-    switch (fromBalanceResult, toBalanceResult) {
-      case (#err(e), _) { return #err(e) };
-      case (_, #err(e)) { return #err(e) };
-      case (#ok(_), #ok(_)) {
-        let accountIdentifier = await IcpLedger.account_identifier({
-          owner = to;
-          subaccount = null;
-        });
-
-        let transferArgs : IcpLedger.TransferArgs = {
-          to = accountIdentifier;
-          memo = 0;
-          amount = { e8s = amount };
-          fee = { e8s = 10_000 };
-          from_subaccount = null;
-          created_at_time = null;
-        };
-
-        Debug.print("Initiating transfer to: " # debug_show(to));
-        Debug.print("Amount: " # debug_show(amount));
-
-        let transferResult = await IcpLedger.transfer(transferArgs);
-        switch (transferResult) {
-          case (#Err(transferError)) {
-            Debug.print("Transfer failed: " # debug_show(transferError));
-            return #err("Transfer failed: " # debug_show(transferError));
-          };
-          case (#Ok(blockIndex)) {
-            Debug.print("Transfer successful. Block index: " # debug_show(blockIndex));
-            return #ok(blockIndex);
-          };
-        };
-      };
-    };
+    return await TransactionService.handleTransferICP(from, to, amount, userBalances);
   };
 };
