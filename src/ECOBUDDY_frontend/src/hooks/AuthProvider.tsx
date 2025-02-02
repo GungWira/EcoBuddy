@@ -8,6 +8,7 @@ import { Principal } from "@dfinity/principal";
 import { Identity } from "@dfinity/agent";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 import DailyQuest from "@/components/Chat/DailyQuest";
+import { INTERNET_IDENTITY_URL } from "../constants";
 
 interface DailyQuest {
   date: string;
@@ -29,6 +30,7 @@ interface AuthContextProps {
   loading: boolean;
   dailyQuest: DailyQuest | null;
   updateDailyQuest: (dailyQuest: DailyQuest) => void;
+  ecoBuddyPrincipal: Principal | null;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -44,6 +46,7 @@ const AuthContext = createContext<AuthContextProps>({
   loading: true,
   dailyQuest: null,
   updateDailyQuest: () => {},
+  ecoBuddyPrincipal: null,
 });
 
 const defaultOptions = {
@@ -54,7 +57,7 @@ const defaultOptions = {
   },
 
   loginOptions: {
-    identityProvider: "http://be2us-64aaa-aaaaa-qaabq-cai.localhost:8080/",
+    identityProvider: INTERNET_IDENTITY_URL,
   },
 };
 
@@ -63,6 +66,7 @@ export const useAuthClient = (options = defaultOptions) => {
   const [authUser, setAuthUser] = useState<any>(null);
   const [identity, setIdentity] = useState<any>(null);
   const [principal, setPrincipal] = useState<any>(null);
+  const [ecoBuddyPrincipal, setEcoBuddyPrincipal] = useState<any>(null);
   const [callFunction, setCallFunction] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
   const [dailyQuest, setDailyQuest] = useState<DailyQuest | null>(null);
@@ -124,9 +128,11 @@ export const useAuthClient = (options = defaultOptions) => {
             });
           }
         } else {
-          console.log("User are not verifed");
           logout();
         }
+
+        const serverPrincipal = await actor.getEcobuddyPrincipal();
+        setEcoBuddyPrincipal(serverPrincipal);
 
         setCallFunction(actor);
       } catch (error) {
@@ -202,6 +208,9 @@ export const useAuthClient = (options = defaultOptions) => {
             logout();
           }
 
+          const serverPrincipal = await actor.getEcobuddyPrincipal();
+          setEcoBuddyPrincipal(serverPrincipal);
+
           setCallFunction(actor);
           setLoading(false);
         },
@@ -218,6 +227,7 @@ export const useAuthClient = (options = defaultOptions) => {
       setIdentity(null);
       setPrincipal(null);
       setCallFunction(null);
+      setEcoBuddyPrincipal(null);
       setUser(null);
     }
     setLoading(true);
@@ -244,6 +254,7 @@ export const useAuthClient = (options = defaultOptions) => {
     updateUser,
     dailyQuest,
     updateDailyQuest,
+    ecoBuddyPrincipal,
   };
 };
 

@@ -1,10 +1,11 @@
 import DonateBox from "../../components/Garden/DonateBox";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Draggable from "react-draggable";
 import { Link } from "react-router-dom";
 
 export default function Garden() {
-  const [donation, setDonation] = useState(1010);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [donation, setDonation] = useState(50);
   const [trees, setTrees] = useState<
     { id: number; x: number; y: number; type: string }[]
   >([]);
@@ -24,9 +25,16 @@ export default function Garden() {
 
   const generateRandomTree = (id: number) => ({
     id,
-    x: id == 1 ? 0 : Math.floor(Math.random() * 90) + 5,
-    y: id == 1 ? 0 : Math.floor(Math.random() * 90) + 5,
-    type: `/garden/tree-${Math.floor(Math.random() * 4) + 1}.png`,
+    x: id == 1 ? 0 : id % 2 == 0 ? Math.random() * 720 : Math.random() * -720,
+    y: id == 1 ? 0 : id % 2 == 0 ? Math.random() * 250 : Math.random() * -250,
+    type:
+      id % 11 == 0
+        ? `/garden/tree-4.png`
+        : id % 7 == 0
+        ? `/garden/tree-3.png`
+        : id % 5 == 0
+        ? `/garden/tree-2.png`
+        : `/garden/tree-1.png`,
   });
 
   useEffect(() => {
@@ -45,6 +53,14 @@ export default function Garden() {
     setDonation((prev) => prev + input);
     setBoxDonation(false);
   };
+
+  useEffect(() => {
+    if (mapRef.current) {
+      // Set posisi awal scroll ke tengah
+      mapRef.current.scrollLeft =
+        mapRef.current.scrollWidth / 2 - mapRef.current.clientWidth / 2;
+    }
+  }, []);
 
   return (
     <div className="w-screen h-screen flex-col bg-gardenBackground relative flex overflow-hidden justify-end items-center">
@@ -93,34 +109,41 @@ export default function Garden() {
       </div>
 
       {/* LAND */}
-      <div className="relative w-fit min-w-full flex justify-center items-center">
-        <div className="land relative min-w-full w-fit flex justify-center items-center overflow-hidden h-fit">
+      <div className="relative w-screen min-w-full flex justify-center items-center overflow-visible z-10 no-scrollbar">
+        <div
+          ref={mapRef}
+          className="land relative w-screen lg:w-full flex justify-start md:justify-center items-start overflow-x-auto md:overflow-visible md:overflow-x-visible h-fit no-scrollbar"
+        >
           <img
             src="/garden/land.png"
             alt="land"
-            className="m-0 max-w-none max-h-none p-0 min-h-[70vh] sm:h-[40vh] w-auto"
+            className="m-0 max-w-none max-h-none p-0 min-h-[70vh] sm:h-[40vh] w-auto min-w-[1440px]"
           />
           {/* Tampilkan Pohon */}
-        </div>
-        <div className="w-full absolute h-[70vh] min-w-[1000px] bottom-0 flex justify-center items-center">
-          {trees.map((tree) => (
-            <Draggable key={tree.id} bounds="parent" grid={[20, 12]}>
-              <div
-                className={`absolute flex justify-center left-[${tree.x}%] top-[${tree.y}%]`}
-                style={
-                  tree.id != 1 ? { left: `${tree.x}%`, top: `${tree.y}%` } : {}
-                }
+          <div className="w-full absolute h-[70vh] min-w-[1440px] bottom-0 flex items-center justify-center overflow-y-visible">
+            {trees.map((tree) => (
+              <Draggable
+                key={tree.id}
+                bounds="parent"
+                grid={[20, 12]}
+                defaultPosition={{ x: tree.x, y: tree.y }}
               >
-                <div className="tree w-full absolute top-0 left-0 h-full bg-transparent z-20"></div>
-                <img
-                  src={tree.type}
-                  alt="tree"
-                  className="relative max-w-32 w-full min-h-fit z-10 "
-                />
-                <div className="tree w-20 h-8 absolute -bottom-3 opacity-50 bg-darkSoft rounded-[100%] z-0"></div>
-              </div>
-            </Draggable>
-          ))}
+                <div
+                  className={`absolute flex justify-center z-0 ${
+                    tree.id >= 50 && "hidden"
+                  }`}
+                >
+                  <div className="tree w-full absolute top-0 left-0 h-full bg-transparent z-20"></div>
+                  <img
+                    src={tree.type}
+                    alt="tree"
+                    className="relative max-w-32 lg:max-w-40 xl:max-w-52 2xl:max-w-64 w-full min-h-fit z-10 "
+                  />
+                  <div className="tree w-12 sm:w-16 md:w-20 h-8 absolute -bottom-3 opacity-50 bg-darkSoft rounded-[100%] z-0"></div>
+                </div>
+              </Draggable>
+            ))}
+          </div>
         </div>
       </div>
 

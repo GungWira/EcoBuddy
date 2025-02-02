@@ -24,7 +24,6 @@ function Router() {
         index
         element={isAuth ? <Navigate to="/chat" replace /> : <Home />}
       />
-      <Route path="/garden" element={<Garden />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
@@ -33,6 +32,7 @@ function Router() {
         <Route path="/quiz" element={<Quiz />} />
         <Route path="/quiz/start" element={<Start />} />
         <Route path="/quiz/result" element={<Result />} />
+        <Route path="/garden" element={<Garden />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />
