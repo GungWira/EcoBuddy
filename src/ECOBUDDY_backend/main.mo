@@ -315,7 +315,7 @@ actor class EcoBuddy() = this {
 
     if (achievementResult) {
       // CONVERSATION STARTER ACHIEVEMENT
-      if (Array.find<Text>(AchievementCollected, func(x) { x == "Fun_Talker" }) == null) {
+      if (Array.find<Text>(AchievementCollected, func(x) { x == "Conversation_Starter" }) == null) {
         let conversation_starter_result = await unlockAchievement("Conversation_Starter", userId);
         switch (conversation_starter_result) {
           case (#err(_)) {};
