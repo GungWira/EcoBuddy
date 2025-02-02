@@ -73,7 +73,6 @@ module {
   };
   
   // CHAT RECORD AND HISTORY TYPE
-
   public type Message = {
     id : Text;
     sender : Principal;
