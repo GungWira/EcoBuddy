@@ -5,9 +5,9 @@ import { useAuth } from "../hooks/AuthProvider";
 const ProtectedRoute: React.FC = () => {
   const { isAuth } = useAuth();
 
-  // if (!isAuth) {
-  //   return null; // Pastikan konteks ada
-  // }
+  if (!isAuth) {
+    return null; // Pastikan konteks ada
+  }
 
   return isAuth ? <Outlet /> : <Navigate to="/" replace />;
 };

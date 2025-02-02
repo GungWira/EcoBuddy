@@ -22,7 +22,7 @@ export default function DonateBox({
     setErrorMessage(null);
     try {
       if (value != "") {
-        const amount = Number(value) * 1000000;
+        const amount = Number(value) * 100000000;
         const res = await callFunction.transferICP(
           principal,
           ecoBuddyPrincipal,

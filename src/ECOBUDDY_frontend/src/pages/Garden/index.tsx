@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 export default function Garden() {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [donation, setDonation] = useState(50);
+  const [donation, setDonation] = useState(0);
   const [trees, setTrees] = useState<
     { id: number; x: number; y: number; type: string }[]
   >([]);

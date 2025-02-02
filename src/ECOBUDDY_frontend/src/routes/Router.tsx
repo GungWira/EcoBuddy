@@ -14,9 +14,9 @@ import Garden from "../pages/Garden";
 function Router() {
   const { isAuth } = useAuth();
 
-  // if (!isAuth) {
-  //   return null; // Tunggu sampai konteks dimuat
-  // }
+  if (!isAuth) {
+    return null; // Tunggu sampai konteks dimuat
+  }
 
   return (
     <Routes>

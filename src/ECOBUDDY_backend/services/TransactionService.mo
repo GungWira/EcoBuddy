@@ -64,8 +64,12 @@ module {
       subaccount = null;
     });
 
+    Debug.print(debug_show(balance));
+
     switch (balance) {
       case (null) {
+    Debug.print(debug_show("NULL"));
+
         userBalances.put(
           userId,
           {
@@ -83,7 +87,23 @@ module {
 
       };
       case (?value) {
-        return value;
+    Debug.print(debug_show("Value"));
+    Debug.print(debug_show(value));
+
+        userBalances.put(
+          userId,
+          {
+            id = userId;
+            balance = ledgerBalance;
+            total_transaction = 0;
+          },
+        );
+
+        return {
+          id = userId;
+          balance = ledgerBalance;
+          total_transaction = 0;
+        };
       };
     };
   };
@@ -100,6 +120,8 @@ module {
     Debug.print("From account balance: " # debug_show (fromBalance));
 
     let totalAmountNeeded = Nat64.toNat(amount) + 10_000; // Including the fee
+    Debug.print(debug_show(fromBalance.balance));
+    Debug.print(debug_show(totalAmountNeeded));
     if (fromBalance.balance < totalAmountNeeded) {
       return #err("Insufficient balance to cover the transfer and the fee");
     };
