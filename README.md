@@ -2,6 +2,10 @@
 
 EcoBuddy is a blockchain-powered AI chatbot built on the **Internet Computer (ICP)** using **Motoko**. This project is designed to promote environmental awareness and encourage users to take eco-friendly actions. By leveraging **smart contracts** and **decentralized computing**, EcoBuddy provides a transparent and efficient platform for sustainable initiatives.
 
+<p align="center">
+  <img src="https://amethyst-wrong-bobolink-547.mypinata.cloud/ipfs/QmeNwVtZTFs3aVsoqBkwrRMaQR3iBsgTE4CuRvV2rsPwVf](https://thumbs2.imgbox.com/00/b2/4P6PePmz_t.png" width="100%">
+</p>
+
 ## 🌿 Features
 - **AI-Powered Chatbot** – Provides solutions to environmental queries and assesses user engagement.
 - **EXP & Leveling System** – Users earn EXP based on their interactions and unlock new chatbot skins.
