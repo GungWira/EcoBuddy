@@ -62,7 +62,7 @@ export default function () {
         <div className="w-full max-w-6xl flex justify-center items-center relative mt-8 md:mt-16">
           {/* BACKLIGHT */}
           <div
-            className="absolute z-10 md:w-1/2 w-full md:min-w-96 h-24 rounded-full bg-transparent top-4"
+            className="absolute z-10 w-full md:min-w-96 h-24 rounded-full bg-transparent top-4"
             style={{
               boxShadow: "0px -25px 54.5px 0px rgba(19, 242, 135, 0.25)",
             }}
@@ -70,7 +70,7 @@ export default function () {
           {/* VIDEO */}
           <div className="w-full bg-darkSoft md:rounded-3xl aspect-video relative z-20 rounded-xl overflow-hidden">
             <video autoPlay loop muted>
-              <source src="/home/home-video.mp4" type="video/mp4" />
+              <source src="/home/home-vid.mp4" type="video/mp4" />
             </video>
           </div>
         </div>
