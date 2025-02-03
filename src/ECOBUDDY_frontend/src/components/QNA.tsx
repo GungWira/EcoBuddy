@@ -8,29 +8,29 @@ interface FAQItem {
 const FAQ: React.FC = () => {
   const faqs: FAQItem[] = [
     {
-      question: "What is EcoBuddy?",
+      question: "What is EcoBuddy, and how does it work?",
       answer:
-        "EcoBuddy is your personal assistant for sustainable living. It helps you sort waste, track your eco-friendly actions, and provides tips to make greener choices every day.",
+        "EcoBuddy is a blockchain-powered AI chatbot built on the Internet Computer (ICP) using Motoko. It helps users engage in eco-friendly activities, track their contributions, and earn EXP based on their environmental impact. With smart contract integration, users can securely donate ICP tokens to support tree-planting initiatives, ensuring transparency and real-world impact.",
     },
     {
-      question: "How does the waste sorting feature work?",
+      question: "How does the EXP system work in EcoBuddy?",
       answer:
-        "EcoBuddy guides you step-by-step to categorize your waste into recyclables, organics, and non-recyclables. It also provides nearby drop-off locations for proper disposal.",
+        "Every time you interact with EcoBuddy, your input is evaluated based on its environmental impact. You earn EXP based on the importance of your actions, which helps level up your chatbot and unlock new skins. Completing daily quests and quizzes also grants additional EXP.",
     },
     {
-      question: "What benefits do I get as a Premium user?",
+      question: "How does the donation feature work?",
       answer:
-        "Premium users enjoy features like detailed impact tracking, advanced waste sorting suggestions, exclusive bot customization, and priority access to eco-friendly resources.",
+        "Users can donate ICP tokens, which are securely processed through smart contracts on the Internet Computer blockchain. Every 0.5 ICP donated translates to a tree being planted, which is reflected in your virtual Garden page as an animated tree representing real-world contributions.",
     },
     {
-      question: "Is EcoBuddy free to use?",
+      question: "How does EcoBuddy ensure transparency in donations?",
       answer:
-        "Yes, EcoBuddy offers a Free Plan that provides essential features like eco-tips, waste sorting guides, and basic progress tracking. For advanced features, you can upgrade to the Premium Plan.",
+        "EcoBuddy utilizes blockchain technology on the Internet Computer (ICP) to ensure full transparency and security in donations. All transactions are recorded on-chain, and users can track their contributions through a publicly verifiable ledger.",
     },
     {
-      question: "Can I earn rewards with EcoBuddy?",
+      question: "What technologies power EcoBuddy?",
       answer:
-        "Yes! By completing green activities and selling recyclable materials through the platform, you can earn tokens that can be used for various rewards or transactions.",
+        "EcoBuddy is built on the Internet Computer (ICP) using Motoko, React, Tailwind, GSAP, and Draggable React. AI-powered features are supported by Gemini AI API, ensuring an intelligent and interactive user experience.",
     },
   ];
 
