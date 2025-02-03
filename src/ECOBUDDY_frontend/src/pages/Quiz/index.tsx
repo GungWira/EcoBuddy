@@ -76,6 +76,7 @@ export default function Quiz() {
                 <div className="flex flex-row w-full justify-start sm:justify-center items-start sm:items-center gap-4 mt-6 overflow-x-scroll no-scrollbar">
                   {dailyQuiz.map((quiz) => (
                     <CardTheme
+                      key={quiz.id}
                       id={quiz.id}
                       isComplete={quiz.status}
                       onClick={() =>

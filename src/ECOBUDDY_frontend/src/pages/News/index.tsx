@@ -16,7 +16,6 @@ export default function News() {
       try {
         const res = await callFunction.getNews();
         const datas = await JSON.parse(res);
-        console.log(datas.posts);
         setNews(datas.posts);
       } catch (error) {
         console.log(error);

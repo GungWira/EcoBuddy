@@ -26,7 +26,7 @@ export default function EditProfile({
   const { callFunction, updateUser, user } = useAuth();
   const element = useRef(null);
   const [start, setStart] = useState(false);
-  const [name, setName] = useState<string | undefined>();
+  const [name, setName] = useState<string>("");
 
   const [base64, setBase64] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
