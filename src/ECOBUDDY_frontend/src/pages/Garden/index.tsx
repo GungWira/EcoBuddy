@@ -2,8 +2,10 @@ import DonateBox from "../../components/Garden/DonateBox";
 import React, { useState, useEffect, useRef } from "react";
 import Draggable from "react-draggable";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/AuthProvider";
 
 export default function Garden() {
+  const { callFunction, principal } = useAuth();
   const mapRef = useRef<HTMLDivElement>(null);
   const [donation, setDonation] = useState(0);
   const [trees, setTrees] = useState<
@@ -11,13 +13,28 @@ export default function Garden() {
   >([]);
   const [boxDonation, setBoxDonation] = useState(false);
 
+  const getTree = async () => {
+    if (callFunction) {
+      try {
+        const data = await callFunction.getTree(principal);
+        setDonation(Number(data));
+      } catch (error) {
+        console.error("Error fetching donation data:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getTree();
+  }, [callFunction, principal]);
+
   function calculateDisplayedTrees(donationAmount: number): number {
     if (donationAmount <= 10) {
       return donationAmount;
     } else if (donationAmount > 10 && donationAmount <= 60) {
-      return 10 + Math.floor((donation - 10) / 3);
+      return 10 + Math.floor((donationAmount - 10) / 3);
     } else {
-      return 30 + Math.floor((donation - 60) / 8);
+      return 30 + Math.floor((donationAmount - 60) / 8);
     }
   }
 
@@ -25,14 +42,14 @@ export default function Garden() {
 
   const generateRandomTree = (id: number) => ({
     id,
-    x: id == 1 ? 0 : id % 2 == 0 ? Math.random() * 720 : Math.random() * -720,
-    y: id == 1 ? 0 : id % 2 == 0 ? Math.random() * 250 : Math.random() * -250,
+    x: id == 1 ? 0 : id % 2 === 0 ? Math.random() * 720 : Math.random() * -720,
+    y: id == 1 ? 0 : id % 2 === 0 ? Math.random() * 250 : Math.random() * -250,
     type:
-      id % 11 == 0
+      id % 11 === 0
         ? `/garden/tree-4.png`
-        : id % 7 == 0
+        : id % 7 === 0
         ? `/garden/tree-3.png`
-        : id % 5 == 0
+        : id % 5 === 0
         ? `/garden/tree-2.png`
         : `/garden/tree-1.png`,
   });
@@ -40,23 +57,20 @@ export default function Garden() {
   useEffect(() => {
     setTrees((prevTrees) => {
       const newTrees = [...prevTrees];
-
       while (newTrees.length < treesPlanted) {
         newTrees.push(generateRandomTree(newTrees.length + 1));
       }
-
       return newTrees;
     });
-  }, [treesPlanted]);
+  }, [treesPlanted, donation]);
 
-  const handleDonate = (input: number) => {
-    setDonation((prev) => prev + input);
+  const handleDonate = async () => {
+    await getTree();
     setBoxDonation(false);
   };
 
   useEffect(() => {
     if (mapRef.current) {
-      // Set posisi awal scroll ke tengah
       mapRef.current.scrollLeft =
         mapRef.current.scrollWidth / 2 - mapRef.current.clientWidth / 2;
     }
