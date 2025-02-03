@@ -85,6 +85,48 @@ To start the local development server:
    ```bash
    dfx deploy
    ```
+
+Topup Balance For Canister:
+1. **Retrieve the Canister Principal**  
+   Run the following command to get the principal of the ECOBUDDY backend canister:  
+   ```sh
+   dfx canister call ECOBUDDY_backend getEcobuddyPrincipal
+   ```  
+   Copy the generated principal.
+
+2. **Get the Ledger Account ID**  
+   Use the copied principal to obtain the corresponding ledger account ID:  
+   ```sh
+   dfx ledger account-id --of-canister <PASTE_PRINCIPAL_HERE>
+   ```  
+   Copy the generated account ID.
+
+3. **Transfer ICP Tokens**  
+   Send 20 ICP tokens to the account ID retrieved in the previous step:  
+   ```sh
+   dfx ledger transfer --amount 20 --memo 0 <PASTE_ACCOUNT_ID_HERE>
+   ```
+
+Topup Balance For Canister:
+1. **Retrieve the Canister Principal**  
+   Run the following command to get the principal of the ECOBUDDY backend canister:  
+   ```sh
+   dfx canister call ECOBUDDY_backend getEcobuddyPrincipal
+   ```  
+   Copy the generated principal.
+
+2. **Get the Ledger Account ID**  
+   Use the copied principal to obtain the corresponding ledger account ID:  
+   ```sh
+   dfx ledger account-id --of-canister <PASTE_PRINCIPAL_HERE>
+   ```  
+   Copy the generated account ID.
+
+3. **Transfer ICP Tokens**  
+   Send 20 ICP tokens to the account ID retrieved in the previous step:  
+   ```sh
+   dfx ledger transfer --amount 20 --memo 0 <PASTE_ACCOUNT_ID_HERE>
+   ```
    
 Your application should now be running at `http://[your CANISTER_ID_ECOBUDDY_FRONTEND].localhost:4943`.
 
