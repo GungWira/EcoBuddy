@@ -14,6 +14,7 @@ module {
   public type DailyQuizs = HashMap.HashMap<Principal, DailyQuiz>;
   // ACHIEVEMENT PROGRES
   public type AchievementProgs = HashMap.HashMap<Principal, AchievementProg>;
+  public type Donations = HashMap.HashMap<Principal, Donation>;
 
   // USER TYPE
   public type User = {
@@ -117,5 +118,8 @@ module {
     name : Text;
     avatar : Text;
     createdAt : Int;
+  };
+  public type Donation = {
+    count : Nat;
   };
 };
