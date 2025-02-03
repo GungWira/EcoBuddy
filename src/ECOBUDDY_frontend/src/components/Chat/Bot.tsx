@@ -5,6 +5,7 @@ import Button from "../Button";
 import Shine from "../Shine";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../hooks/AuthProvider";
+import { useNotification } from "../../hooks/NotificationProvider";
 
 interface BotProps {
   level: number;
@@ -28,9 +29,10 @@ export default function Bot({
   onClick,
 }: BotProps) {
   const { user } = useAuth();
+  const { addNotification } = useNotification();
   const element = useRef(null);
   const [lastExp, setLastExp] = useState(-1);
-  const [userLevel, setUserLevel] = useState(-1);
+  const [userLevel, setUserLevel] = useState(1);
   const [userPlot, setUserPlot] = useState(5);
 
   useEffect(() => {
@@ -87,13 +89,14 @@ export default function Bot({
 
   useEffect(() => {
     if (prog && level) {
-      if (userLevel == -1) {
+      if (userLevel == 1) {
         setUserLevel(level);
       }
 
       if (prog < lastExp) {
         setUserLevel(userLevel + 1);
       }
+      lastExp != -1 && addNotification(true, undefined, prog - lastExp);
       setLastExp(prog);
     }
   }, [prog]);
@@ -116,7 +119,7 @@ export default function Bot({
             <div className="flex justify-between items-center gap-4 sm:gap-8 w-full">
               <div className="flex justify-start items-center gap-2 sm:gap-3">
                 <img
-                  src={`/chat/badge-lv-${userLevel}.png`}
+                  src={`/chat/badge-lv-${Math.ceil(userLevel / userPlot)}.png`}
                   alt="Badge"
                   className="max-w-none max-h-none h-6 sm:h-7 m-0"
                 />
