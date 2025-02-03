@@ -18,6 +18,7 @@ import DailyQuiz "services/DailyQuiz";
 import ExpService "services/ExpService";
 import TransactionService "services/TransactionService";
 import AchievementService "services/AchievementService";
+import NewsService "services/NewsService";
 
 import IcpLedger "canister:icp_ledger_canister";
 
@@ -150,7 +151,7 @@ actor class EcoBuddy() = this {
           };
           case (#ok(result)) {
             // CHECK ACHIEVEMENT
-            let _ = await checkAchievement(userId, currentUser, result.solution, input);
+            let _ = await checkAchievement(userId, result.solution, input);
             // ADD QUEST
             let userDailyQuest = await DailyQuest.addChatCount(userId, dailyQuests);
             let expQuest = switch(userDailyQuest){
@@ -296,12 +297,10 @@ actor class EcoBuddy() = this {
     }
   };
 
-  public func checkAchievement(userId : Principal, currentUser : Types.User, solution : Text, input : Text) : async Bool {
+  public func checkAchievement(userId : Principal, solution : Text, input : Text) : async Bool {
     var achievements : [Text] = [];
     // AMBIL SEMUA ACHIEVEMENT YANG SUDAH USER MILIKI
     let achievementResult = await getAchievement(userId);
-    Debug.print("Achievement Result :");
-    Debug.print(debug_show(achievementResult));
     let achievementProgress = await AchievementService.getUserProgress(userId, achievementProgs);
 
     if (achievementResult) {
@@ -404,6 +403,12 @@ actor class EcoBuddy() = this {
     amount : Nat64,
   ) : async Result.Result<IcpLedger.BlockIndex, Text> {
     return await TransactionService.handleTransferICP(from, to, amount, userBalances);
+  };
+
+  // NEWS
+  public func getNews() : async Text{
+    let news = await NewsService.getNews();
+    news;
   };
 };
 

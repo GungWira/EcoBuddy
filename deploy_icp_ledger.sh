@@ -16,14 +16,6 @@ dfx identity use minter
 MINTER_ACCOUNT_ID=$(dfx ledger account-id)
 
 Please enter the passphrase for your identity: [hidden]
-Error: Failed to create AgentEnvironment.
-Caused by: Failed to create AgentEnvironment for network 'local'.
-Caused by: Failed to load identity
-Caused by: Failed to instantiate identity
-Caused by: Failed to load PEM
-Caused by: Failed to load PEM file from file
-Caused by: Failed to decrypt PEM file at /home/abi/.config/dfx/identity/minter/identity.pem.encrypted
-Caused by: Failed to decrypt content: aead::Error
 # Switch back to default identity
 dfx identity use default
 DEFAULT_ACCOUNT_ID=$(dfx ledger account-id)
