@@ -61,6 +61,7 @@ To integrate **Gemini AI** and **GPT**, you need API keys:
      API_KEY=your_api_key_here
      ```
 **OR**
+
 2. **Obtain OpenAI GPT API Key**
    - Sign up at [OpenAI](https://openai.com/) and generate an API key.
    - Add the key to your `/src/ECOBUDDY_backend/constants/GlobalConstants.mo` file:
