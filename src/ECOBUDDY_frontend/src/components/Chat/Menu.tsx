@@ -41,6 +41,32 @@ export default function Menu({ onClick }: MenuProps) {
             </div>
             <p className="font-poppins text-white text-sm">Quest</p>
           </button>
+          <Link
+            to={"/garden"}
+            className="flex flex-col justify-center items-center gap-1"
+          >
+            <div className="w-8 aspect-square overflow-hidden">
+              <img
+                src="/chat/donate.png"
+                alt="Donate Icon"
+                className="max-w-none max-h-none m-0 w-full"
+              />
+            </div>
+            <p className="font-poppins text-white text-sm">Garden</p>
+          </Link>
+          <Link
+            to={"/news"}
+            className="flex flex-col justify-center items-center gap-1"
+          >
+            <div className="w-8 aspect-square overflow-hidden">
+              <img
+                src="/chat/news.png"
+                alt="Lighting Icon"
+                className="max-w-none max-h-none m-0 w-full"
+              />
+            </div>
+            <p className="font-poppins text-white text-sm">News</p>
+          </Link>
         </div>
       </div>
     </div>
