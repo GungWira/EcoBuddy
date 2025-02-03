@@ -9,6 +9,14 @@ import { useAuth } from "../hooks/AuthProvider";
 
 export default function () {
   const { login } = useAuth();
+
+  const scrollToSection = (id: string) => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <main className="bg-darkMain w-full">
       <Navbar />
@@ -40,7 +48,11 @@ export default function () {
                 className="w-4 overflow-hidden aspect-square"
               />
             </Button>
-            <Button link="#service" type="secondary">
+            <Button
+              link="#service"
+              type="secondary"
+              onClick={() => scrollToSection("services")}
+            >
               Explore more
             </Button>
           </div>
@@ -56,8 +68,10 @@ export default function () {
             }}
           ></div>
           {/* VIDEO */}
-          <div className="w-full bg-darkSoft rounded-xl md:rounded-3xl aspect-video relative z-20">
-            <video src="" autoPlay loop={true}></video>
+          <div className="w-full bg-darkSoft md:rounded-3xl aspect-video relative z-20 rounded-xl overflow-hidden">
+            <video autoPlay loop muted>
+              <source src="/home/home-video.mp4" type="video/mp4" />
+            </video>
           </div>
         </div>
 
