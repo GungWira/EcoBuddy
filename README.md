@@ -6,9 +6,9 @@ EcoBuddy is a blockchain-powered AI chatbot built on the **Internet Computer (IC
   <img src="https://i.imghippo.com/files/ucP2128Xx.png" width="100%">
 </p>
 
-**Video Demo**: [https://youtu.be](https://youtu)
+**Video Demo**: [Video](https://youtu.be)
 
-**Documents Apps**: [https://drive.google.com/drive/folders/1FJM-WmmKf0G8A7nIps7uVL7myaYXoO6C?usp=sharing](https://drive.google.com/drive/folders/1FJM-WmmKf0G8A7nIps7uVL7myaYXoO6C?usp=sharing)
+**Documents Apps**: [Documents](https://drive.google.com/drive/folders/1FJM-WmmKf0G8A7nIps7uVL7myaYXoO6C?usp=sharing)
 
 ---
 
