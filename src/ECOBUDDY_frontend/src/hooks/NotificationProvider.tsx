@@ -37,7 +37,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       {children}
 
       {/* Notifikasi di global layout */}
-      <div className="fixed top-8 right-8 z-50 flex flex-col gap-3">
+      <div className="fixed top-8 right-8 z-50 flex flex-col gap-3 justify-end items-end">
         {notifications.map((notif) => (
           <Notification
             key={notif.id}

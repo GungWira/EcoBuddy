@@ -62,7 +62,7 @@ export default function Chat() {
   useEffect(() => {
     if (user && isAuth) {
       setUsername(user.username);
-      setWalletAddres(user.walletAddres);
+      setWalletAddres(user.walletAddress);
       setLevel(Number(user.level));
 
       setMyBuddy({
@@ -113,7 +113,7 @@ export default function Chat() {
             id: principal,
             username: userData[0].username,
             level: userData[0].level,
-            walletAddres: walletAddres,
+            walletAddress: userData[0].walletAddress,
             expPoints: userData[0].expPoints,
             achievements: userData[0].achievements,
             avatar: userData[0].avatar,
@@ -122,12 +122,8 @@ export default function Chat() {
           if (dailyQuest) {
             if (dailyQuest.chatCount <= 9) {
               addNotification(false, "Daily Quest Progres +1");
-              addNotification(true, undefined, botAns.ok.exp);
             } else if (dailyQuest.chatCount == 10) {
               addNotification(false, "1 Daily Quest Complete!");
-              addNotification(true, undefined, 20 + botAns.ok.exp);
-            } else {
-              addNotification(true, undefined, botAns.ok.exp);
             }
             updateDailyQuest({
               login: dailyQuest.login,
