@@ -6,11 +6,17 @@ EcoBuddy is a blockchain-powered AI chatbot built on the **Internet Computer (IC
   <img src="https://i.imghippo.com/files/ucP2128Xx.png" width="100%">
 </p>
 
+## 👥 Team Members
+EcoBuddy is developed by a dedicated team of three members:
+- **Ida Bagus Dharma Abimantra** – Leader, Backend Developer
+- **Anak Agung Gede Putu Wiradarma** – Full-stack Developer
+- **I Made Sutha Raditya** – UI/UX Designer
+
 ## 🌿 Features
 - **AI-Powered Chatbot** – Provides solutions to environmental queries and assesses user engagement.
 - **EXP & Leveling System** – Users earn EXP based on their interactions and unlock new chatbot skins.
 - **Daily Quests & Achievements** – Users complete eco-friendly challenges to earn rewards.
-- **Daily Quizzes** – Daily quizzes that interesting to do.
+- **Dynamic Daily Quizzes** – AI-generated environmental quizzes that refresh every day.
 - **Blockchain-Based Donations** – Users donate **ICP tokens**, which are used to plant real trees.
 - **Virtual Garden** – Visual representation of donated trees via **2D animations**.
 - **News Feed** – Curated environmental news updates.
@@ -31,7 +37,7 @@ Before setting up the project, ensure you have the following installed:
 Clone the repository and install dependencies:
 ```sh
 # Clone the repo
-git clone https://github.com/your-username/ecobuddy.git
+git clone https://github.com/GungWira/EcoBuddy.git
 cd ecobuddy
 
 # Install dependencies
