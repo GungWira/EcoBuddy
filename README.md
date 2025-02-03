@@ -6,7 +6,7 @@ EcoBuddy is a blockchain-powered AI chatbot built on the **Internet Computer (IC
   <img src="https://i.imghippo.com/files/ucP2128Xx.png" width="100%">
 </p>
 
-**Video Demo**: [Video](https://youtu.be)
+**Video Demo**: [Video](https://www.youtube.com/watch?v=Vp9tliVhfn0)
 
 **Documents Apps**: [Documents](https://drive.google.com/drive/folders/1FJM-WmmKf0G8A7nIps7uVL7myaYXoO6C?usp=sharing)
 
@@ -86,49 +86,38 @@ To start the local development server:
    dfx deploy
    ```
 
-Topup Balance For Canister:
-1. **Retrieve the Canister Principal**  
-   Run the following command to get the principal of the ECOBUDDY backend canister:  
-   ```sh
-   dfx canister call ECOBUDDY_backend getEcobuddyPrincipal
-   ```  
-   Copy the generated principal.
-
-2. **Get the Ledger Account ID**  
-   Use the copied principal to obtain the corresponding ledger account ID:  
-   ```sh
-   dfx ledger account-id --of-canister <PASTE_PRINCIPAL_HERE>
-   ```  
-   Copy the generated account ID.
-
-3. **Transfer ICP Tokens**  
-   Send 20 ICP tokens to the account ID retrieved in the previous step:  
-   ```sh
-   dfx ledger transfer --amount 20 --memo 0 <PASTE_ACCOUNT_ID_HERE>
-   ```
-
-Topup Balance For Canister:
-1. **Retrieve the Canister Principal**  
-   Run the following command to get the principal of the ECOBUDDY backend canister:  
-   ```sh
-   dfx canister call ECOBUDDY_backend getEcobuddyPrincipal
-   ```  
-   Copy the generated principal.
-
-2. **Get the Ledger Account ID**  
-   Use the copied principal to obtain the corresponding ledger account ID:  
-   ```sh
-   dfx ledger account-id --of-canister <PASTE_PRINCIPAL_HERE>
-   ```  
-   Copy the generated account ID.
-
-3. **Transfer ICP Tokens**  
-   Send 20 ICP tokens to the account ID retrieved in the previous step:  
-   ```sh
-   dfx ledger transfer --amount 20 --memo 0 <PASTE_ACCOUNT_ID_HERE>
-   ```
-   
 Your application should now be running at `http://[your CANISTER_ID_ECOBUDDY_FRONTEND].localhost:4943`.
+
+Topup Balance For Canister:
+1. **Retrieve the Canister Principal**  
+   Run the following command to get the principal of the ECOBUDDY backend canister:  
+   ```sh
+   dfx canister call ECOBUDDY_backend getEcobuddyPrincipal
+   ```  
+   Copy the generated principal.
+
+2. **Get the Ledger Account ID**  
+   Use the copied principal to obtain the corresponding ledger account ID:  
+   ```sh
+   dfx ledger account-id --of-canister <PASTE_PRINCIPAL_HERE>
+   ```  
+   Copy the generated account ID.
+
+3. **Transfer ICP Tokens**  
+   Send 20 ICP tokens to the account ID retrieved in the previous step:  
+   ```sh
+   dfx ledger transfer --amount 20 --memo 0 <PASTE_ACCOUNT_ID_HERE>
+   ```
+
+Topup Balance For User:
+1. **Retrieve the User Wallet Address**  
+   In Wallet feature, copy the wallet addres
+
+2. **Transfer ICP Tokens**  
+   Send 20 ICP tokens to the account ID retrieved in the previous step:  
+   ```sh
+   dfx ledger transfer --amount 20 --memo 0 <PASTE_WALLET_ADDRESS_HERE>
+   ```
 
 ## 🔮 Conclusion & Future Plans
 EcoBuddy aims to **bridge blockchain technology and environmental consciousness** through an engaging AI-driven chatbot. Moving forward, we plan to:
