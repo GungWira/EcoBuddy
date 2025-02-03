@@ -71,17 +71,22 @@ To integrate **Gemini AI** or **GPT**, you need API keys:
 
 ## 💻 Local Development
 To start the local development server:
-1. Deploy the ICP Ledger:
+1. Clean dfx processes on system:
+   ```bash
+   dfx killall
+   ```
+   
+2. Deploy the ICP Ledger:
    ```bash
    npm run deploy-ledger
    ```
 
-2. Deploy project canisters:
+3. Deploy project canisters:
    ```bash
    dfx deploy
    ```
    
-Your application should now be running at `http://[your CANISTER_ID_ECOBUDDY_FRONTEND].localhost:8080`.
+Your application should now be running at `http://[your CANISTER_ID_ECOBUDDY_FRONTEND].localhost:4943`.
 
 ## 🔮 Conclusion & Future Plans
 EcoBuddy aims to **bridge blockchain technology and environmental consciousness** through an engaging AI-driven chatbot. Moving forward, we plan to:
