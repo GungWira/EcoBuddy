@@ -6,6 +6,9 @@ EcoBuddy is a blockchain-powered AI chatbot built on the **Internet Computer (IC
   <img src="https://i.imghippo.com/files/ucP2128Xx.png" width="100%">
 </p>
 
+**Video Demo : **[https://youtube.com]
+**Documents : **[https://drive.google.com/drive/folders/1FJM-WmmKf0G8A7nIps7uVL7myaYXoO6C?usp=sharing]
+
 ## 👥 Team Members
 EcoBuddy is developed by a dedicated team of three members:
 - **Ida Bagus Dharma Abimantra** – Leader, Backend Developer
@@ -54,7 +57,7 @@ To integrate **Gemini AI** and **GPT**, you need API keys:
      ```sh
      API_KEY=your_api_key_here
      ```
-
+**OR**
 2. **Obtain OpenAI GPT API Key**
    - Sign up at [OpenAI](https://openai.com/) and generate an API key.
    - Add the key to your `/src/ECOBUDDY_backend/constants/GlobalConstants.mo` file:
