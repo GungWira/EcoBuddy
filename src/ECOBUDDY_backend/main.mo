@@ -139,61 +139,56 @@ actor class EcoBuddy() = this {
   public func askBot(input : Text, userId : Principal) : async Result.Result<Types.ResponseAI, Text> {
     let res = await AiService.askBot(input, passAnswer);
     let generatedUUID = AiService.generateUUID();
-    let userData = users.get(userId);
 
-    switch (userData) {
-      case (null) { #err("User not found") };
-      case (?currentUser) {
-        switch (res) {
-          case(#err(s)) { 
-            passAnswer := "";
-            #err s 
+    switch (res) {
+      case(#err(s)) { 
+        passAnswer := "";
+        #err s 
+      };
+      case (#ok(result)) {
+        // CHECK ACHIEVEMENT
+        let _ = await checkAchievement(userId, result.solution, input);
+        // ADD QUEST
+        let userDailyQuest = await DailyQuest.addChatCount(userId, dailyQuests);
+        let expQuest = switch(userDailyQuest){
+          case(#ok(userDailyQuestValid)){
+            if(userDailyQuestValid.chatCount == 10){ 20 }else{ 0 }
           };
-          case (#ok(result)) {
-            // CHECK ACHIEVEMENT
-            let _ = await checkAchievement(userId, result.solution, input);
-            // ADD QUEST
-            let userDailyQuest = await DailyQuest.addChatCount(userId, dailyQuests);
-            let expQuest = switch(userDailyQuest){
-              case(#ok(userDailyQuestValid)){
-                if(userDailyQuestValid.chatCount == 10){ 20 }else{ 0 }
-              };
-              case (_){
-                0
-              };
-            };
-            
-            // ADD USER EXP
-            let addUserEXP = await addExp(Int.abs(result.exp + expQuest), userId);
-            switch (addUserEXP) {
-              case (#err(_)) { #err("Error Adding User EXP") };
-              case (#ok(expOk)) {
-                passAnswer := result.solution;
-                let final = {
-                  solution = result.solution;
-                  exp = expOk;
-                };
-
-                messageRecords.put(
-                  generatedUUID,
-                  {
-                    id = generatedUUID;
-                    sender = userId;
-                    content = input;
-                    timestamp = Time.now();
-                    messageType = #UserMessage;
-                  },
-                );
-
-
-                #ok final;
-              };
-            };
-
+          case (_){
+            0
           };
         };
+        
+        // ADD USER EXP
+        let addUserEXP = await addExp(Int.abs(result.exp + expQuest), userId);
+        switch (addUserEXP) {
+          case (#err(_)) { #err("Error Adding User EXP") };
+          case (#ok(expOk)) {
+            passAnswer := result.solution;
+            let final = {
+              solution = result.solution;
+              exp = expOk;
+            };
+
+            messageRecords.put(
+              generatedUUID,
+              {
+                id = generatedUUID;
+                sender = userId;
+                content = input;
+                timestamp = Time.now();
+                messageType = #UserMessage;
+              },
+            );
+
+
+            #ok final;
+          };
+        };
+
       };
     };
+
   };
 
   public func askQuiz(theme : Text) : async Result.Result <Text, Text> {

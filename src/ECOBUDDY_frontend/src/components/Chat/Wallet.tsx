@@ -6,6 +6,7 @@ interface WalletProps {
   address: string;
   hidden: boolean;
   onClick: () => void;
+  isLoading: boolean;
 }
 
 export default function Wallet({
@@ -13,6 +14,7 @@ export default function Wallet({
   address,
   hidden,
   onClick,
+  isLoading,
 }: WalletProps) {
   const element = useRef(null);
   const [isCopied, setIsCopied] = useState(false);
@@ -95,7 +97,7 @@ export default function Wallet({
           <div className="flex flex-col justify-start items-start gap-2 pr-10 px-4 py-4 bg-greenGradient rounded-xl">
             <p className="font-poppins text-darkMain text-base">Balance</p>
             <p className="font-poppins text-darkMain text-2xl font-semibold">
-              {balance} ICP
+              {isLoading ? 0 : balance / 100000000} ICP
             </p>
           </div>
           <div className="flex flex-col justify-start items-start gap-3 p-4 border border-whiteSoft rounded-xl w-full max-w-full overflow-hidden">
