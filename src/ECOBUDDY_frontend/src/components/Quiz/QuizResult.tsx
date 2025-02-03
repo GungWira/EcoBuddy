@@ -12,24 +12,28 @@ interface QuizResultProps {
 export default function QuizResult({ isCalculate }: QuizResultProps) {
   const { addNotification } = useNotification();
   const navigate = useNavigate();
-  const { score, dailyQuiz } = useTheme();
+  const { score, dailyQuiz, loading } = useTheme();
 
   useEffect(() => {
-    if (score == null) {
-      navigate("/quiz");
-    } else {
-      if (
-        dailyQuiz[0].status == true &&
-        dailyQuiz[1].status == true &&
-        dailyQuiz[2].status == true
-      ) {
-        addNotification(false, "1 Daily Complete!");
+    if (isCalculate) {
+      if (score == null) {
+        navigate("/quiz");
       } else {
-        addNotification(false, "Daily Quest +1");
+        if (
+          dailyQuiz[0].status == true &&
+          dailyQuiz[1].status == true &&
+          dailyQuiz[2].status == true
+        ) {
+          addNotification(false, "1 Daily Complete!");
+        } else {
+          addNotification(false, "Daily Quest +1");
+        }
+        addNotification(true, undefined, score * 5);
       }
-      addNotification(true, undefined, score * 5);
+    } else {
+      console.log("Calculating");
     }
-  }, [score]);
+  }, [isCalculate]);
 
   return (
     <div

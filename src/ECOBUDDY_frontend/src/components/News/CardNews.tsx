@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 
 interface CardNewsProps {
-  key: number;
   title: string;
   description: string;
   imageUrl: string;
@@ -10,12 +9,10 @@ interface CardNewsProps {
 }
 
 export default function CardNews({
-  key,
   title = "Trash Issue",
   description = "The news of trash issue around world",
   imageUrl,
   linkTo,
-  isLoading,
 }: CardNewsProps) {
   return (
     <Link
@@ -25,7 +22,6 @@ export default function CardNews({
         ".html"
       }
       className="w-full rounded-xl px-4 py-5 flex flex-col justify-start items-start gap-3 bg-darkSoft cursor-pointer"
-      key={key}
     >
       <div className="w-full aspect-video bg-whiteSoft overflow-hidden flex justify-center items-center rounded-md">
         <img

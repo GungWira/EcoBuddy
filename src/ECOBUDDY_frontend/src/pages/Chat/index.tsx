@@ -338,10 +338,7 @@ export default function Chat() {
                     </div>
                   </div>
                   <div className="flex flex-row justify-end items-center gap-4">
-                    <button
-                      typeof="button"
-                      className="w-fit max-w-36 rounded-full px-2 gap-2 py-1 border border-whiteSoft flex flex-row justify-start items-center relative group z-10"
-                    >
+                    <div className="w-fit max-w-36 rounded-full px-2 gap-2 py-1 border border-whiteSoft flex flex-row justify-start items-center relative group z-10">
                       <img
                         src={user ? user.profile : "/chat/default-profile.png"}
                         alt="User Profile"
@@ -425,7 +422,7 @@ export default function Chat() {
                           </button>
                         </div>
                       </div>
-                    </button>
+                    </div>
                     <Menu onClick={() => setIsDailyQuest(true)} />
                   </div>
                 </div>
