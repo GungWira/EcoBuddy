@@ -52,9 +52,9 @@ mops install
 ```
 
 ## 🌎 Environment Setup
-To integrate **Gemini AI** and **GPT**, you need API keys:
+To integrate **Gemini AI** or **GPT**, you need API keys:
 
-1. **Obtain Gemini API Key**
+- **Obtain Gemini API Key**
    - Sign up at [Google AI](https://ai.google.dev/) and generate an API key.
    - Add the key to your `/src/ECOBUDDY_backend/constants/GlobalConstants.mo` file:
      ```sh
@@ -62,7 +62,7 @@ To integrate **Gemini AI** and **GPT**, you need API keys:
      ```
 **OR**
 
-2. **Obtain OpenAI GPT API Key**
+- **Obtain OpenAI GPT API Key**
    - Sign up at [OpenAI](https://openai.com/) and generate an API key.
    - Add the key to your `/src/ECOBUDDY_backend/constants/GlobalConstants.mo` file:
      ```sh
