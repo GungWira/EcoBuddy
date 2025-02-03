@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/AuthProvider";
 
 const ProtectedRoute: React.FC = () => {
-  const { isAuth } = useAuth();
+  const { isAuth, loading } = useAuth();
 
-  if (!isAuth) {
-    return null; // Pastikan konteks ada
-  }
+  useEffect(() => {
+    if (!isAuth) {
+      return;
+    }
+  }, [loading]);
 
   return isAuth ? <Outlet /> : <Navigate to="/" replace />;
 };

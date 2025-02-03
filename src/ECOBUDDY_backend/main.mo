@@ -401,8 +401,20 @@ actor class EcoBuddy() = this {
     from : Principal,
     to : Principal,
     amount : Nat64,
+    userId : Principal
   ) : async Result.Result<IcpLedger.BlockIndex, Text> {
-    return await TransactionService.handleTransferICP(from, to, amount, userBalances);
+    let transaction = await TransactionService.handleTransferICP(from, to, amount, userBalances);
+    switch(transaction){
+      case(#ok success){
+        let exp = 100 * Nat64.toNat(amount) / 100000000;
+        let _addExp = await addExp(exp, userId);
+        Debug.print(debug_show(exp));
+        return #ok success;
+      };
+      case(#err(t)){
+        return #err t;
+      };
+    };
   };
 
   // NEWS

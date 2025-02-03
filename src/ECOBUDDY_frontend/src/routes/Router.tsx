@@ -10,13 +10,17 @@ import Quiz from "../pages/Quiz";
 import Start from "../pages/Quiz/Start";
 import Result from "../pages/Quiz/Result";
 import Garden from "../pages/Garden";
+import News from "../pages/News";
+import { useEffect } from "react";
 
 function Router() {
-  const { isAuth } = useAuth();
+  const { isAuth, loading } = useAuth();
 
-  if (!isAuth) {
-    return null; // Tunggu sampai konteks dimuat
-  }
+  useEffect(() => {
+    if (!isAuth) {
+      return;
+    }
+  }, [loading]);
 
   return (
     <Routes>
@@ -24,6 +28,8 @@ function Router() {
         index
         element={isAuth ? <Navigate to="/chat" replace /> : <Home />}
       />
+
+      <Route path="/news" element={<News />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
