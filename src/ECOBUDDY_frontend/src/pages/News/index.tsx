@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/AuthProvider";
 
 export default function News() {
-  const { authUser, callFunction } = useAuth();
+  const { callFunction } = useAuth();
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);

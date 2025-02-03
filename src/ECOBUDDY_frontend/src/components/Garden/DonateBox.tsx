@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../../hooks/AuthProvider";
+import { useNotification } from "../../hooks/NotificationProvider";
 
 interface DonateBoxProps {
   isActive: boolean;
@@ -12,6 +13,7 @@ export default function DonateBox({
   onSuccess,
   onClick,
 }: DonateBoxProps) {
+  const { addNotification } = useNotification();
   const { principal, ecoBuddyPrincipal, callFunction } = useAuth();
   const [value, setValue] = useState<number | string>(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -30,6 +32,8 @@ export default function DonateBox({
         );
         console.log(res);
         if ("ok" in res) {
+          addNotification(true, undefined, Number(value) * 100);
+          addNotification(false, "Donation Successful!");
           setValue(0);
           onSuccess(Number(value));
         } else {

@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingDots from "../../components/Chat/LoadingDots";
 import Menu from "../../components/Chat/Menu";
 import DailyQuest from "../../components/Chat/DailyQuest";
+import { useNotification } from "../../hooks/NotificationProvider";
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ export default function Chat() {
     dailyQuest,
     updateDailyQuest,
   } = useAuth();
+
+  const { addNotification } = useNotification();
   const [isIntro, setIsIntro] = useState<boolean>(true);
   const [isWallet, setIsWallet] = useState<boolean>(false);
   const [isEditProfile, setIsEditProfile] = useState<boolean>(false);
@@ -51,6 +54,8 @@ export default function Chat() {
   const [isGenerateAnswer, setIsGenerateAnswer] = useState<Boolean>(false);
   const [isFinishTyping, setIsFinishTyping] = useState(true);
   const [isDailyQuest, setIsDailyQuest] = useState(false);
+  const [balance, setBalance] = useState(0);
+  const [inLoad, setInLoad] = useState(false);
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -103,7 +108,6 @@ export default function Chat() {
         } else {
           setResponse((prev) => [...prev, botAns.ok.solution]);
           const userData = await callFunction.getUserById(principal);
-          console.log(userData);
 
           updateUser({
             id: principal,
@@ -116,6 +120,15 @@ export default function Chat() {
             profile: userData[0].profile,
           });
           if (dailyQuest) {
+            if (dailyQuest.chatCount <= 9) {
+              addNotification(false, "Daily Quest Progres +1");
+              addNotification(true, undefined, botAns.ok.exp);
+            } else if (dailyQuest.chatCount == 10) {
+              addNotification(false, "1 Daily Quest Complete!");
+              addNotification(true, undefined, 20 + botAns.ok.exp);
+            } else {
+              addNotification(true, undefined, botAns.ok.exp);
+            }
             updateDailyQuest({
               login: dailyQuest.login,
               date: dailyQuest.date,
@@ -140,6 +153,23 @@ export default function Chat() {
       handlerChat();
     }
   };
+
+  useEffect(() => {
+    const getBalance = async () => {
+      setInLoad(true);
+      try {
+        if (isWallet) {
+          const res = await callFunction.getAccountBalance(principal);
+          setBalance(Number(res.balance));
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setInLoad(false);
+      }
+    };
+    getBalance();
+  }, [isWallet]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -170,7 +200,8 @@ export default function Chat() {
 
           {/* WALLET */}
           <Wallet
-            balance={1}
+            balance={balance}
+            isLoading={inLoad}
             address={walletAddres || ""}
             hidden={!isWallet}
             onClick={() => setIsWallet(false)}

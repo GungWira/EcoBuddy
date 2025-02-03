@@ -3,18 +3,31 @@ import { Link } from "react-router-dom";
 import Button from "../Button";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../../hooks/NotificationProvider";
 
 interface QuizResultProps {
   isCalculate: boolean;
 }
 
 export default function QuizResult({ isCalculate }: QuizResultProps) {
+  const { addNotification } = useNotification();
   const navigate = useNavigate();
-  const { score } = useTheme();
+  const { score, dailyQuiz } = useTheme();
 
   useEffect(() => {
     if (score == null) {
       navigate("/quiz");
+    } else {
+      if (
+        dailyQuiz[0].status == true &&
+        dailyQuiz[1].status == true &&
+        dailyQuiz[2].status == true
+      ) {
+        addNotification(false, "1 Daily Complete!");
+      } else {
+        addNotification(false, "Daily Quest +1");
+      }
+      addNotification(true, undefined, score * 5);
     }
   }, [score]);
 
