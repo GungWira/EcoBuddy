@@ -64,6 +64,11 @@ actor class EcoBuddy() = this {
     Principal.equal,
     Principal.hash,
   );
+  private var donations: Types.Donations = HashMap.HashMap<Principal, Types.Donation>(
+    10,
+    Principal.equal,
+    Principal.hash,
+  );
 
   public type AchievementList = {
     #Conversation_Starter;
@@ -83,6 +88,7 @@ actor class EcoBuddy() = this {
   private stable var dailyQuestsEntries : [(Principal, Types.DailyQuest)] = [];
   private stable var dailyQuizsEntries : [(Principal, Types.DailyQuiz)] = [];
   private stable var achievementProgsEntries : [(Principal, Types.AchievementProg)] = [];
+  private stable var donationEntries : [(Principal, Types.Donation)] = [];
 
   // PREUPGRADE & POSTUPGRADE FUNC TO KEEP DATA
   system func preupgrade() {
@@ -92,7 +98,7 @@ actor class EcoBuddy() = this {
     dailyQuestsEntries := Iter.toArray(dailyQuests.entries());
     dailyQuizsEntries := Iter.toArray(dailyQuizs.entries());
     achievementProgsEntries := Iter.toArray(achievementProgs.entries());
-    
+    donationEntries := Iter.toArray(donations.entries());
   };
 
   system func postupgrade() {
@@ -112,6 +118,8 @@ actor class EcoBuddy() = this {
     
     achievementProgs := HashMap.fromIter<Principal, Types.AchievementProg>(achievementProgsEntries.vals(), 0, Principal.equal, Principal.hash);
     achievementProgsEntries := [];
+    donations := HashMap.fromIter<Principal, Types.Donation>(donationEntries.vals(), 0, Principal.equal, Principal.hash);
+    donationEntries := [];
   };
 
   // USERS ------------------------------------------------------------------ USERS
@@ -396,13 +404,25 @@ actor class EcoBuddy() = this {
     from : Principal,
     to : Principal,
     amount : Nat64,
-    userId : Principal
   ) : async Result.Result<IcpLedger.BlockIndex, Text> {
     let transaction = await TransactionService.handleTransferICP(from, to, amount, userBalances);
     switch(transaction){
       case(#ok success){
         let exp = 100 * Nat64.toNat(amount) / 100000000;
-        let _addExp = await addExp(exp, userId);
+        let _addExp = await addExp(exp, from);
+        let tree = Nat64.toNat(amount) / 100000000;
+        let userDonate = switch(donations.get(from)){
+          case(null){
+              tree;
+          };
+          case (?is){
+              is.count + tree
+          }
+        };
+        let newData = {
+          count = userDonate;
+        };
+        let _donatedTree = donations.put(from, newData);
         Debug.print(debug_show(exp));
         return #ok success;
       };
@@ -416,6 +436,18 @@ actor class EcoBuddy() = this {
   public func getNews() : async Text{
     let news = await NewsService.getNews();
     news;
+  };
+    // GARDEN
+  public func getTree(userId : Principal) : async Nat{
+    let donate = donations.get(userId);
+    switch(donate){
+      case(?don){
+        don.count;
+      };
+      case(null){
+        0
+      };
+    };
   };
 };
 
