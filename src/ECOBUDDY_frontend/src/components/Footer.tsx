@@ -28,13 +28,13 @@ export default function Footer() {
               Home
             </Link>
             <Link
-              to={"/"}
+              to={"/chat"}
               className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Chat
             </Link>
             <Link
-              to={"/"}
+              to={"/profile"}
               className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Profile
@@ -45,19 +45,19 @@ export default function Footer() {
               Useful Links
             </p>
             <Link
-              to={""}
+              to={"https://internetcomputer.org/docs/current/home"}
               className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Docs
             </Link>
             <Link
-              to={""}
+              to={"https://github.com/GungWira/EcoBuddy"}
               className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Github
             </Link>
             <Link
-              to={""}
+              to={"https://www.youtube.com/@dappsicp"}
               className="font-poppins text-white text-sm sm:text-sm md:text-base opacity-60"
             >
               Youtube
