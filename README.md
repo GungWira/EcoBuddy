@@ -44,7 +44,7 @@ Clone the repository and install dependencies:
 ```sh
 # Clone the repo
 git clone https://github.com/GungWira/EcoBuddy.git
-cd ecobuddy
+cd EcoBuddy
 
 # Install dependencies
 npm install
